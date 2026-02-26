@@ -1,0 +1,2212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RMF Control Manager — NIST 800-53 Rev 5</title>
+<link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+/* ═══════════════════════════════════════════════════════════
+   ROOT VARIABLES
+═══════════════════════════════════════════════════════════ */
+:root {
+  --bg:       #060d16;
+  --bg1:      #0a1422;
+  --bg2:      #0e1c30;
+  --bg3:      #122238;
+  --s1:       #162840;
+  --s2:       #1b3050;
+  --s3:       #203860;
+  --border:   #1e3454;
+  --border2:  #294a72;
+  --accent:   #3b82f6;
+  --accentL:  #60a5fa;
+  --accentD:  #1d4ed8;
+  --teal:     #14b8a6;
+  --green:    #22c55e;
+  --yellow:   #eab308;
+  --orange:   #f97316;
+  --red:      #ef4444;
+  --purple:   #8b5cf6;
+  --pink:     #ec4899;
+  --text:     #e2ecf7;
+  --text2:    #8aa8c8;
+  --text3:    #4d6a88;
+  --font:     'DM Sans', sans-serif;
+  --mono:     'JetBrains Mono', monospace;
+  --r:        6px;
+  --r2:       10px;
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html { font-size: 14px; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+body::before {
+  content: '';
+  position: fixed; inset: 0;
+  background:
+    radial-gradient(ellipse 80% 40% at 10% -10%, rgba(59,130,246,0.06) 0%, transparent 60%),
+    radial-gradient(ellipse 60% 40% at 90% 110%, rgba(20,184,166,0.04) 0%, transparent 60%);
+  pointer-events: none; z-index: 0;
+}
+::-webkit-scrollbar { width: 5px; height: 5px; }
+::-webkit-scrollbar-track { background: var(--bg1); }
+::-webkit-scrollbar-thumb { background: var(--border2); border-radius: 3px; }
+
+/* ═══════════════════════════════════════════════════════════
+   LAYOUT SHELL
+═══════════════════════════════════════════════════════════ */
+#app { display: flex; height: 100vh; overflow: hidden; position: relative; z-index: 1; }
+
+/* LEFT NAV */
+#nav {
+  width: 220px; flex-shrink: 0;
+  background: var(--bg1);
+  border-right: 1px solid var(--border);
+  display: flex; flex-direction: column;
+  overflow-y: auto;
+}
+.nav-logo {
+  padding: 18px 16px 14px;
+  border-bottom: 1px solid var(--border);
+}
+.nav-logo-mark {
+  display: flex; align-items: center; gap: 9px; margin-bottom: 4px;
+}
+.logo-icon {
+  width: 28px; height: 28px;
+  background: linear-gradient(135deg, var(--accent), var(--teal));
+  border-radius: 7px;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--mono); font-size: 10px; font-weight: 700; color: white;
+}
+.logo-name { font-weight: 700; font-size: 13px; letter-spacing: -0.01em; }
+.logo-sub { font-family: var(--mono); font-size: 9px; color: var(--text3); letter-spacing: 0.06em; }
+
+.nav-section { padding: 12px 8px 4px; }
+.nav-section-lbl {
+  font-family: var(--mono); font-size: 9px; color: var(--text3);
+  text-transform: uppercase; letter-spacing: 0.1em; padding: 0 8px; margin-bottom: 4px;
+}
+.nav-item {
+  display: flex; align-items: center; gap: 9px;
+  padding: 8px 10px; border-radius: var(--r); cursor: pointer;
+  color: var(--text2); font-size: 12px; font-weight: 500;
+  transition: all 0.12s; margin-bottom: 1px; border: none; background: none; width: 100%; text-align: left;
+}
+.nav-item:hover { background: var(--s1); color: var(--text); }
+.nav-item.active { background: rgba(59,130,246,0.12); color: var(--accentL); }
+.nav-item svg { width: 14px; height: 14px; flex-shrink: 0; opacity: 0.7; }
+.nav-item.active svg { opacity: 1; }
+.nav-badge {
+  margin-left: auto; font-family: var(--mono); font-size: 9px;
+  background: var(--s2); color: var(--text3); padding: 1px 5px; border-radius: 10px;
+}
+.nav-item.active .nav-badge { background: rgba(59,130,246,0.2); color: var(--accentL); }
+
+.nav-divider { height: 1px; background: var(--border); margin: 8px 16px; }
+
+/* Family filter in nav */
+.fam-scroll { flex: 1; overflow-y: auto; padding: 0 8px 16px; }
+.fam-btn {
+  display: flex; align-items: center; gap: 7px; width: 100%;
+  background: none; border: none; padding: 5px 8px; border-radius: 4px;
+  cursor: pointer; color: var(--text3); font-family: var(--mono); font-size: 10px;
+  text-align: left; transition: all 0.1s; margin-bottom: 1px;
+}
+.fam-btn:hover { background: var(--s1); color: var(--text2); }
+.fam-btn.active { background: rgba(59,130,246,0.1); color: var(--accentL); }
+.fam-code { font-weight: 700; min-width: 22px; }
+.fam-cnt { margin-left: auto; color: var(--text3); }
+.fam-btn.active .fam-cnt { color: var(--accentL); opacity: 0.7; }
+
+/* MAIN */
+#main { flex: 1; display: flex; flex-direction: column; overflow: hidden; }
+
+/* TOP BAR */
+#topbar {
+  background: var(--bg1); border-bottom: 1px solid var(--border);
+  padding: 0 20px; height: 52px;
+  display: flex; align-items: center; gap: 12px; flex-shrink: 0;
+}
+.topbar-title { font-size: 14px; font-weight: 600; }
+.topbar-sub { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+.topbar-right { margin-left: auto; display: flex; gap: 8px; align-items: center; }
+.tb-stat { text-align: center; padding: 0 10px; border-left: 1px solid var(--border); }
+.tb-stat-val { font-family: var(--mono); font-size: 13px; font-weight: 700; }
+.tb-stat-lbl { font-family: var(--mono); font-size: 9px; color: var(--text3); text-transform: uppercase; }
+
+/* CONTENT AREA */
+#content { flex: 1; overflow-y: auto; }
+
+/* PAGE VIEWS */
+.page { display: none; padding: 20px; }
+.page.active { display: block; }
+
+/* ═══════════════════════════════════════════════════════════
+   COMPONENTS
+═══════════════════════════════════════════════════════════ */
+
+/* Buttons */
+.btn {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 7px 14px; border-radius: var(--r); border: 1px solid var(--border2);
+  background: var(--s1); color: var(--text2); font-family: var(--mono); font-size: 11px;
+  cursor: pointer; transition: all 0.12s; white-space: nowrap;
+}
+.btn:hover { background: var(--s2); color: var(--text); border-color: var(--border2); }
+.btn svg { width: 12px; height: 12px; }
+.btn-accent { background: rgba(59,130,246,0.15); border-color: var(--accent); color: var(--accentL); }
+.btn-accent:hover { background: rgba(59,130,246,0.25); }
+.btn-green { background: rgba(34,197,94,0.1); border-color: var(--green); color: var(--green); }
+.btn-red { background: rgba(239,68,68,0.1); border-color: var(--red); color: var(--red); }
+.btn-sm { padding: 4px 9px; font-size: 10px; }
+
+/* Cards */
+.card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r2);
+  transition: all 0.15s;
+}
+.card:hover { border-color: var(--border2); }
+
+/* Section headers */
+.sec-head {
+  display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+}
+.sec-title { font-size: 15px; font-weight: 600; }
+.sec-sub { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+
+/* Status badges */
+.sbadge {
+  font-family: var(--mono); font-size: 9px; padding: 2px 7px; border-radius: 3px; border: 1px solid;
+  white-space: nowrap; display: inline-block;
+}
+.s-none     { color: var(--text3);  border-color: rgba(77,106,136,0.3);  background: rgba(77,106,136,0.08); }
+.s-notstart { color: var(--red);    border-color: rgba(239,68,68,0.3);   background: rgba(239,68,68,0.08); }
+.s-inprog   { color: var(--yellow); border-color: rgba(234,179,8,0.3);   background: rgba(234,179,8,0.08); }
+.s-impl     { color: var(--green);  border-color: rgba(34,197,94,0.3);   background: rgba(34,197,94,0.08); }
+.s-na       { color: var(--purple); border-color: rgba(139,92,246,0.3);  background: rgba(139,92,246,0.08); }
+
+/* Inheritance badges */
+.ibadge {
+  font-family: var(--mono); font-size: 9px; padding: 2px 7px; border-radius: 3px; border: 1px solid;
+}
+.i-sys  { color: var(--teal);   border-color: rgba(20,184,166,0.3);  background: rgba(20,184,166,0.08); }
+.i-hyb  { color: var(--orange); border-color: rgba(249,115,22,0.3);  background: rgba(249,115,22,0.08); }
+.i-inh  { color: var(--purple); border-color: rgba(139,92,246,0.3);  background: rgba(139,92,246,0.08); }
+
+/* Risk badges */
+.rbadge {
+  font-family: var(--mono); font-size: 9px; padding: 2px 7px; border-radius: 3px; border: 1px solid;
+}
+.r-cat1 { color: var(--red);    border-color: rgba(239,68,68,0.4);  background: rgba(239,68,68,0.1); }
+.r-cat2 { color: var(--orange); border-color: rgba(249,115,22,0.4); background: rgba(249,115,22,0.1); }
+.r-cat3 { color: var(--yellow); border-color: rgba(234,179,8,0.4);  background: rgba(234,179,8,0.1); }
+.r-high { color: var(--red);    border-color: rgba(239,68,68,0.4);  background: rgba(239,68,68,0.1); }
+.r-mod  { color: var(--orange); border-color: rgba(249,115,22,0.4); background: rgba(249,115,22,0.1); }
+.r-low  { color: var(--yellow); border-color: rgba(234,179,8,0.4);  background: rgba(234,179,8,0.1); }
+
+/* Tags */
+.itag { font-family: var(--mono); font-size: 9px; padding: 1px 5px; border-radius: 2px; border: 1px solid; }
+.t-low  { color: var(--green);  border-color: rgba(34,197,94,0.25);  background: rgba(34,197,94,0.05); }
+.t-mod  { color: var(--yellow); border-color: rgba(234,179,8,0.25);  background: rgba(234,179,8,0.05); }
+.t-high { color: var(--red);    border-color: rgba(239,68,68,0.25);  background: rgba(239,68,68,0.05); }
+
+/* Forms */
+input, select, textarea {
+  background: var(--bg3); border: 1px solid var(--border); color: var(--text);
+  font-family: var(--font); font-size: 12px; padding: 8px 10px; border-radius: var(--r);
+  outline: none; transition: border-color 0.2s; width: 100%;
+}
+input:focus, select:focus, textarea:focus { border-color: var(--accent); }
+input::placeholder, textarea::placeholder { color: var(--text3); }
+label { font-family: var(--mono); font-size: 10px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.06em; display: block; margin-bottom: 5px; }
+.form-row { margin-bottom: 14px; }
+.form-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.form-grid-3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+
+/* Tables */
+table { width: 100%; border-collapse: collapse; font-size: 12px; }
+th { font-family: var(--mono); font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; padding: 8px 12px; text-align: left; border-bottom: 1px solid var(--border); white-space: nowrap; }
+td { padding: 10px 12px; border-bottom: 1px solid var(--border); vertical-align: middle; color: var(--text2); }
+tr:last-child td { border-bottom: none; }
+tr:hover td { background: var(--s1); color: var(--text); }
+
+/* Progress bar */
+.pbar-track { height: 5px; background: var(--border); border-radius: 3px; overflow: hidden; display: flex; }
+.pbar-seg { height: 100%; transition: width 0.4s ease; }
+
+/* Keyboard shortcut badge */
+.kbd { font-family: var(--mono); font-size: 9px; padding: 1px 5px; background: var(--s2); border: 1px solid var(--border2); border-radius: 3px; color: var(--text3); }
+
+/* Tabs */
+.tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 16px; }
+.tab { font-family: var(--mono); font-size: 10px; padding: 8px 14px; color: var(--text3); cursor: pointer; border-bottom: 2px solid transparent; margin-bottom: -1px; transition: all 0.15s; white-space: nowrap; }
+.tab:hover { color: var(--text2); }
+.tab.active { color: var(--accentL); border-bottom-color: var(--accent); }
+.tab-panel { display: none; }
+.tab-panel.active { display: block; }
+
+/* Overlay / Modal */
+.overlay {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.8); z-index: 1000;
+  display: none; align-items: flex-start; justify-content: center;
+  padding: 20px; overflow-y: auto; backdrop-filter: blur(8px);
+}
+.overlay.open { display: flex; }
+.modal {
+  background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r2);
+  width: 100%; max-width: 900px; margin: auto; position: relative;
+}
+.modal-head {
+  padding: 18px 22px; border-bottom: 1px solid var(--border);
+  display: flex; align-items: flex-start; gap: 12px;
+  position: sticky; top: 0; background: var(--bg2); z-index: 10; border-radius: var(--r2) var(--r2) 0 0;
+}
+.modal-close {
+  margin-left: auto; background: none; border: 1px solid var(--border); color: var(--text3);
+  width: 26px; height: 26px; border-radius: 4px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center; font-size: 13px; transition: all 0.15s; flex-shrink: 0;
+}
+.modal-close:hover { color: var(--text); border-color: var(--text2); }
+.modal-body { padding: 22px; max-height: 80vh; overflow-y: auto; }
+
+/* Tooltips */
+[data-tip] { position: relative; }
+[data-tip]:hover::after {
+  content: attr(data-tip);
+  position: absolute; bottom: calc(100% + 6px); left: 50%; transform: translateX(-50%);
+  background: var(--s3); border: 1px solid var(--border2); color: var(--text);
+  font-family: var(--mono); font-size: 10px; padding: 4px 8px; border-radius: 4px;
+  white-space: nowrap; z-index: 9999; pointer-events: none;
+}
+
+/* Toast */
+#toast {
+  position: fixed; bottom: 20px; right: 20px; z-index: 9000;
+  background: var(--s3); border: 1px solid var(--border2); border-radius: var(--r);
+  padding: 10px 16px; font-family: var(--mono); font-size: 11px; color: var(--text);
+  transform: translateY(60px); opacity: 0; transition: all 0.25s;
+}
+#toast.show { transform: translateY(0); opacity: 1; }
+
+/* Checkbox */
+input[type=checkbox] {
+  width: 14px; height: 14px; cursor: pointer; accent-color: var(--accent);
+  padding: 0; border-radius: 3px;
+}
+
+/* ═══════════════════════════════════════════════════════════
+   PAGE: CONTROLS
+═══════════════════════════════════════════════════════════ */
+.ctrl-toolbar {
+  display: flex; gap: 8px; align-items: center; flex-wrap: wrap; margin-bottom: 14px;
+}
+.search-box { flex: 1; min-width: 200px; position: relative; }
+.search-box svg { position: absolute; left: 9px; top: 50%; transform: translateY(-50%); color: var(--text3); width: 13px; height: 13px; pointer-events: none; }
+.search-box input { padding-left: 30px; }
+
+.ctrl-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(370px, 1fr)); gap: 9px; }
+.ctrl-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r2);
+  padding: 13px 14px; cursor: pointer; transition: all 0.15s; position: relative; overflow: hidden;
+}
+.ctrl-card::after {
+  content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px;
+  transition: opacity 0.15s; opacity: 0;
+}
+.ctrl-card:hover { border-color: var(--border2); background: var(--bg3); transform: translateY(-1px); box-shadow: 0 6px 24px rgba(0,0,0,0.35); }
+.ctrl-card:hover::after { opacity: 1; }
+.ctrl-card.sel-active { border-color: var(--accent); background: rgba(59,130,246,0.06); }
+.ctrl-card.sel-active::after { background: var(--accent); opacity: 1; }
+.cc-s-none::after     { background: var(--text3); }
+.cc-s-notstart::after { background: var(--red); }
+.cc-s-inprog::after   { background: var(--yellow); }
+.cc-s-impl::after     { background: var(--green); }
+.cc-s-na::after       { background: var(--purple); }
+
+.ctrl-card-head { display: flex; align-items: flex-start; gap: 8px; margin-bottom: 6px; }
+.ctrl-id { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--accentL); padding: 2px 6px; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); border-radius: 3px; white-space: nowrap; flex-shrink: 0; }
+.ctrl-title { font-size: 12px; font-weight: 600; line-height: 1.4; flex: 1; }
+.ctrl-desc { font-size: 11px; color: var(--text3); line-height: 1.6; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; margin-bottom: 8px; }
+.ctrl-foot { display: flex; gap: 5px; align-items: center; flex-wrap: wrap; }
+.ctrl-meta { margin-left: auto; display: flex; gap: 4px; }
+.meta-chip { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+
+/* Bulk select bar */
+#bulkBar {
+  display: none; align-items: center; gap: 10px;
+  background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.3);
+  border-radius: var(--r); padding: 8px 14px; margin-bottom: 12px;
+}
+#bulkBar.show { display: flex; }
+.bulk-count { font-family: var(--mono); font-size: 11px; color: var(--accentL); }
+
+/* ═══════════════════════════════════════════════════════════
+   PAGE: DASHBOARD
+═══════════════════════════════════════════════════════════ */
+.dash-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 12px; margin-bottom: 20px; }
+.dash-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r2); padding: 16px;
+}
+.dash-val { font-family: var(--mono); font-size: 28px; font-weight: 700; line-height: 1; margin-bottom: 4px; }
+.dash-lbl { font-family: var(--mono); font-size: 9px; color: var(--text3); text-transform: uppercase; letter-spacing: 0.08em; }
+.dash-sub { font-size: 11px; color: var(--text3); margin-top: 6px; }
+
+.family-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 10px; }
+.fam-ato-card {
+  background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r2); padding: 14px;
+}
+.fam-ato-head { display: flex; align-items: center; gap: 8px; margin-bottom: 10px; }
+.fam-ato-code { font-family: var(--mono); font-size: 11px; font-weight: 700; color: var(--accentL); }
+.fam-ato-name { font-size: 12px; color: var(--text2); }
+.fam-ato-score { margin-left: auto; font-family: var(--mono); font-size: 13px; font-weight: 700; }
+.fam-ato-bar { margin-bottom: 8px; }
+.fam-ato-counts { display: flex; gap: 10px; }
+.fac { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+.fac span { font-weight: 700; }
+
+/* ═══════════════════════════════════════════════════════════
+   POAM TABLE
+═══════════════════════════════════════════════════════════ */
+.poam-toolbar { display: flex; gap: 8px; margin-bottom: 14px; align-items: center; }
+.poam-table-wrap { background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r2); overflow: hidden; }
+
+/* ═══════════════════════════════════════════════════════════
+   MODAL SPECIFIC
+═══════════════════════════════════════════════════════════ */
+.modal-ctrl-id { font-family: var(--mono); font-size: 12px; font-weight: 700; color: var(--accentL); padding: 4px 10px; background: rgba(59,130,246,0.1); border: 1px solid rgba(59,130,246,0.2); border-radius: 3px; flex-shrink: 0; }
+.modal-ctrl-title { font-size: 17px; font-weight: 700; line-height: 1.3; }
+.modal-ctrl-family { font-family: var(--mono); font-size: 10px; color: var(--text3); margin-top: 3px; }
+
+.msec { margin-bottom: 18px; }
+.msec-lbl { font-family: var(--mono); font-size: 10px; color: var(--accent); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 8px; padding-bottom: 5px; border-bottom: 1px solid var(--border); }
+.msec-text { font-size: 12px; color: var(--text2); line-height: 1.8; }
+
+.enh-item { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r); padding: 12px; margin-bottom: 8px; }
+.enh-head { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.enh-id { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--purple); padding: 1px 6px; background: rgba(139,92,246,0.1); border: 1px solid rgba(139,92,246,0.2); border-radius: 2px; }
+.enh-title { font-size: 12px; font-weight: 600; }
+
+.cci-item { background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r); padding: 10px 13px; margin-bottom: 7px; display: flex; gap: 12px; }
+.cci-id { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--yellow); min-width: 110px; }
+.cci-ap { font-family: var(--mono); font-size: 9px; color: var(--text3); margin-top: 3px; }
+.cci-def { font-size: 11px; color: var(--text2); line-height: 1.7; }
+
+.related-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+.rel-chip { font-family: var(--mono); font-size: 10px; padding: 4px 9px; background: var(--bg3); border: 1px solid var(--border); border-radius: 3px; color: var(--text2); cursor: pointer; transition: all 0.12s; }
+.rel-chip:hover { border-color: var(--accentL); color: var(--accentL); }
+
+/* Status buttons in modal */
+.status-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.sts-btn { font-family: var(--mono); font-size: 10px; padding: 6px 12px; border-radius: var(--r); border: 1px solid var(--border); background: none; color: var(--text3); cursor: pointer; transition: all 0.12s; }
+.sts-btn:hover { border-color: var(--border2); color: var(--text2); }
+.sts-btn.a-notstart { background: rgba(239,68,68,0.15); border-color: var(--red); color: var(--red); }
+.sts-btn.a-inprog   { background: rgba(234,179,8,0.15); border-color: var(--yellow); color: var(--yellow); }
+.sts-btn.a-impl     { background: rgba(34,197,94,0.15); border-color: var(--green); color: var(--green); }
+.sts-btn.a-na       { background: rgba(139,92,246,0.15); border-color: var(--purple); color: var(--purple); }
+
+/* Inheritance row */
+.inh-row { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+.inh-btn { font-family: var(--mono); font-size: 10px; padding: 6px 12px; border-radius: var(--r); border: 1px solid var(--border); background: none; color: var(--text3); cursor: pointer; transition: all 0.12s; }
+.inh-btn:hover { border-color: var(--border2); color: var(--text2); }
+.inh-btn.a-sys { background: rgba(20,184,166,0.15); border-color: var(--teal); color: var(--teal); }
+.inh-btn.a-hyb { background: rgba(249,115,22,0.15); border-color: var(--orange); color: var(--orange); }
+.inh-btn.a-inh { background: rgba(139,92,246,0.15); border-color: var(--purple); color: var(--purple); }
+
+/* Comment feed */
+.comment-feed { max-height: 220px; overflow-y: auto; margin-bottom: 12px; }
+.comment-item { padding: 10px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 6px; }
+.comment-meta { font-family: var(--mono); font-size: 9px; color: var(--text3); margin-bottom: 5px; display: flex; gap: 10px; }
+.comment-author { color: var(--accentL); }
+.comment-text { font-size: 12px; color: var(--text2); line-height: 1.6; }
+
+/* Evidence list */
+.evid-item { display: flex; align-items: center; gap: 10px; padding: 9px 12px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 6px; }
+.evid-icon { width: 26px; height: 26px; background: rgba(59,130,246,0.1); border-radius: 4px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; font-size: 12px; }
+.evid-name { font-size: 12px; color: var(--text); flex: 1; word-break: break-all; }
+.evid-link { color: var(--accentL); text-decoration: none; font-size: 11px; }
+.evid-link:hover { text-decoration: underline; }
+.evid-date { font-family: var(--mono); font-size: 9px; color: var(--text3); }
+.evid-del { background: none; border: none; color: var(--text3); cursor: pointer; font-size: 13px; padding: 2px 6px; border-radius: 3px; }
+.evid-del:hover { color: var(--red); background: rgba(239,68,68,0.1); }
+
+/* STIG findings */
+.stig-item { padding: 10px 13px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 7px; }
+.stig-head { display: flex; align-items: center; gap: 8px; margin-bottom: 5px; }
+.stig-id { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--text2); }
+.stig-title { font-size: 12px; font-weight: 500; flex: 1; }
+.stig-text { font-size: 11px; color: var(--text3); line-height: 1.6; }
+
+/* AI panel */
+.ai-panel { background: var(--bg3); border: 1px solid rgba(59,130,246,0.15); border-radius: var(--r2); padding: 16px; }
+.ai-header { display: flex; align-items: center; gap: 8px; margin-bottom: 12px; }
+.ai-pulse { width: 7px; height: 7px; background: var(--green); border-radius: 50%; animation: pulse 2s infinite; }
+@keyframes pulse { 0%,100%{opacity:1;} 50%{opacity:0.4;} }
+.ai-lbl { font-family: var(--mono); font-size: 10px; color: var(--green); letter-spacing: 0.08em; }
+.ai-chips { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 12px; }
+.ai-chip { font-family: var(--mono); font-size: 10px; padding: 4px 8px; background: var(--s1); border: 1px solid var(--border2); border-radius: 3px; color: var(--text2); cursor: pointer; transition: all 0.12s; }
+.ai-chip:hover { border-color: var(--accent); color: var(--accentL); }
+.ai-row { display: flex; gap: 8px; }
+.ai-input { flex: 1; font-family: var(--font); }
+.ai-go { background: var(--accentD); border: none; color: white; font-family: var(--mono); font-size: 11px; padding: 8px 16px; border-radius: var(--r); cursor: pointer; transition: background 0.15s; }
+.ai-go:hover { background: var(--accent); }
+.ai-go:disabled { opacity: 0.4; cursor: not-allowed; }
+.ai-thinking { display: none; font-family: var(--mono); font-size: 11px; color: var(--text3); margin-top: 10px; }
+.ai-thinking.show { display: block; }
+.ai-thinking::after { content: '...'; animation: dots 1.2s infinite steps(3,end); }
+@keyframes dots{0%{content:'.';}33%{content:'..';}66%{content:'...';}100%{content:'';}}
+.ai-resp { display: none; margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--border); }
+.ai-resp.show { display: block; }
+.ai-resp-lbl { font-family: var(--mono); font-size: 9px; color: var(--green); margin-bottom: 8px; }
+.ai-resp-text { font-size: 12px; color: var(--text); line-height: 1.85; }
+
+/* Overlay selector (overlays page) */
+.overlay-grid { display: grid; grid-template-columns: repeat(3,1fr); gap: 12px; margin-bottom: 20px; }
+.overlay-card {
+  background: var(--bg2); border: 2px solid var(--border); border-radius: var(--r2); padding: 16px; cursor: pointer; transition: all 0.15s;
+}
+.overlay-card:hover { border-color: var(--border2); }
+.overlay-card.active { border-color: var(--accent); background: rgba(59,130,246,0.06); }
+.overlay-icon { font-size: 24px; margin-bottom: 8px; }
+.overlay-name { font-size: 13px; font-weight: 600; margin-bottom: 4px; }
+.overlay-desc { font-size: 11px; color: var(--text3); line-height: 1.5; }
+
+/* User mgmt */
+.user-card { display: flex; align-items: center; gap: 12px; padding: 12px 14px; background: var(--bg2); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 8px; }
+.user-avatar { width: 32px; height: 32px; border-radius: 50%; background: linear-gradient(135deg, var(--accent), var(--teal)); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 12px; flex-shrink: 0; }
+.user-name { font-size: 13px; font-weight: 600; }
+.user-role { font-family: var(--mono); font-size: 10px; color: var(--text3); }
+.user-assignments { font-family: var(--mono); font-size: 10px; color: var(--accentL); margin-left: auto; }
+
+/* Print styles */
+@media print {
+  #nav, #topbar, .ctrl-toolbar, .btn, #toast { display: none !important; }
+  #app { display: block; }
+  #content { overflow: visible; }
+  .page { display: block !important; }
+  body { background: white; color: black; }
+}
+
+/* Keyboard shortcuts overlay */
+#kbHelp {
+  position: fixed; inset: 0; background: rgba(0,0,0,0.85); z-index: 9999; display: none; align-items: center; justify-content: center;
+}
+#kbHelp.open { display: flex; }
+.kb-modal { background: var(--bg2); border: 1px solid var(--border2); border-radius: var(--r2); padding: 24px; min-width: 380px; max-width: 480px; }
+.kb-title { font-size: 15px; font-weight: 700; margin-bottom: 16px; }
+.kb-row { display: flex; align-items: center; justify-content: space-between; padding: 7px 0; border-bottom: 1px solid var(--border); }
+.kb-row:last-child { border: none; }
+.kb-desc { font-size: 12px; color: var(--text2); }
+.kb-keys { display: flex; gap: 4px; }
+
+/* CVE panel */
+.cve-item { padding: 10px 13px; background: var(--bg3); border: 1px solid var(--border); border-radius: var(--r); margin-bottom: 7px; }
+.cve-head { display: flex; align-items: center; gap: 8px; margin-bottom: 4px; }
+.cve-id { font-family: var(--mono); font-size: 10px; font-weight: 700; color: var(--accentL); }
+.cve-score { font-family: var(--mono); font-size: 10px; }
+.cve-desc { font-size: 11px; color: var(--text3); line-height: 1.6; }
+
+@media (max-width:800px) {
+  #nav { display: none; }
+  .dash-grid { grid-template-columns: repeat(2,1fr); }
+  .overlay-grid { grid-template-columns: 1fr; }
+  .ctrl-grid { grid-template-columns: 1fr; }
+}
+</style>
+</head>
+<body>
+
+<div id="app">
+  <!-- LEFT NAV -->
+  <nav id="nav">
+    <div class="nav-logo">
+      <div class="nav-logo-mark">
+        <div class="logo-icon">RMF</div>
+        <div class="logo-name">ControlMgr</div>
+      </div>
+      <div class="logo-sub">NIST 800-53 REV 5</div>
+    </div>
+
+    <div class="nav-section">
+      <div class="nav-section-lbl">Views</div>
+      <button class="nav-item active" onclick="showPage('dashboard',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/></svg>
+        Dashboard
+      </button>
+      <button class="nav-item" onclick="showPage('controls',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 11l3 3L22 4"/><path d="M21 12v7a2 2 0 01-2 2H5a2 2 0 01-2-2V5a2 2 0 012-2h11"/></svg>
+        Controls
+        <span class="nav-badge" id="navCtrlCount">0</span>
+      </button>
+      <button class="nav-item" onclick="showPage('poam',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>
+        POA&amp;M
+        <span class="nav-badge" id="navPoamCount">0</span>
+      </button>
+      <button class="nav-item" onclick="showPage('overlays',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"/><polyline points="2 17 12 22 22 17"/><polyline points="2 12 12 17 22 12"/></svg>
+        Overlays
+      </button>
+      <button class="nav-item" onclick="showPage('users',this)">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87M16 3.13a4 4 0 010 7.75"/></svg>
+        Team
+      </button>
+    </div>
+
+    <div class="nav-divider"></div>
+
+    <div class="nav-section">
+      <div class="nav-section-lbl">Filter Family</div>
+    </div>
+    <div class="fam-scroll" id="famNav"></div>
+  </nav>
+
+  <!-- MAIN -->
+  <div id="main">
+    <!-- TOPBAR -->
+    <div id="topbar">
+      <div>
+        <div class="topbar-title" id="topbarTitle">Dashboard</div>
+        <div class="topbar-sub" id="topbarSub">ATO Readiness Overview</div>
+      </div>
+      <div class="topbar-right">
+        <div class="tb-stat">
+          <div class="tb-stat-val" id="tbImpl" style="color:var(--green)">0%</div>
+          <div class="tb-stat-lbl">Implemented</div>
+        </div>
+        <div class="tb-stat">
+          <div class="tb-stat-val" id="tbPoam" style="color:var(--red)">0</div>
+          <div class="tb-stat-lbl">Open POA&amp;Ms</div>
+        </div>
+        <div class="tb-stat">
+          <div class="tb-stat-val" id="tbUsers" style="color:var(--teal)">0</div>
+          <div class="tb-stat-lbl">Team Members</div>
+        </div>
+        <button class="btn btn-accent btn-sm" onclick="exportAll()" data-tip="Export full report">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Export CSV
+        </button>
+        <button class="btn btn-sm btn-green" onclick="exportBackup()" data-tip="Download full data backup">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M7 10l5 5 5-5M12 15V3"/></svg>
+          Backup
+        </button>
+        <button class="btn btn-sm" onclick="importBackup()" data-tip="Restore from backup file">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4M17 8l-5-5-5 5M12 3v12"/></svg>
+          Restore
+        </button>
+        <button class="btn btn-sm" onclick="printReport()" data-tip="Print SSP report">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 6 2 18 2 18 9"/><path d="M6 18H4a2 2 0 01-2-2v-5a2 2 0 012-2h16a2 2 0 012 2v5a2 2 0 01-2 2h-2"/><rect x="6" y="14" width="12" height="8"/></svg>
+          Print SSP
+        </button>
+        <button class="btn btn-sm" onclick="toggleKB()" data-tip="Keyboard shortcuts (?)">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="6" width="20" height="12" rx="2"/><path d="M6 10h.01M10 10h.01M14 10h.01M18 10h.01M8 14h8"/></svg>
+        </button>
+        <div style="font-family:var(--mono);font-size:9px;color:var(--text3);text-align:right;line-height:1.5;padding-left:4px;">
+          <div id="saveIndicator" style="color:var(--green);">● Saved locally</div>
+          <div id="saveTime" style="color:var(--text3);"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CONTENT -->
+    <div id="content">
+
+      <!-- ══ DASHBOARD PAGE ══════════════════════════════════ -->
+      <div class="page active" id="page-dashboard">
+        <div class="sec-head">
+          <div>
+            <div class="sec-title">ATO Readiness Dashboard</div>
+            <div class="sec-sub">Real-time implementation status across all control families</div>
+          </div>
+          <div style="margin-left:auto;display:flex;gap:8px;">
+            <button class="btn btn-sm" onclick="showPage('controls',document.querySelector('.nav-item:nth-child(2)'))">View All Controls →</button>
+          </div>        </div>
+
+        <div class="dash-grid">
+          <div class="dash-card">
+            <div class="dash-val" id="d-total" style="color:var(--accentL)">0</div>
+            <div class="dash-lbl">Total Controls</div>
+            <div class="dash-sub" id="d-total-enh">0 enhancements</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-val" id="d-impl" style="color:var(--green)">0</div>
+            <div class="dash-lbl">Implemented</div>
+            <div class="dash-sub"><span id="d-impl-pct">0%</span> of total</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-val" id="d-open-poam" style="color:var(--red)">0</div>
+            <div class="dash-lbl">Open POA&amp;Ms</div>
+            <div class="dash-sub" id="d-high-poam">0 high risk</div>
+          </div>
+          <div class="dash-card">
+            <div class="dash-val" id="d-ato-score" style="color:var(--yellow)">—</div>
+            <div class="dash-lbl">ATO Readiness</div>
+            <div class="dash-sub" id="d-ato-sub">Based on MOD baseline</div>
+          </div>
+        </div>
+
+        <div style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:16px;margin-bottom:20px;">
+          <div style="font-family:var(--mono);font-size:10px;color:var(--text3);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:10px;">Implementation Progress</div>
+          <div class="pbar-track" style="height:10px;margin-bottom:10px;" id="d-pbar">
+            <div class="pbar-seg" style="background:var(--green);" id="pb-impl"></div>
+            <div class="pbar-seg" style="background:var(--yellow);" id="pb-prog"></div>
+            <div class="pbar-seg" style="background:var(--red);" id="pb-ns"></div>
+            <div class="pbar-seg" style="background:var(--purple);" id="pb-na"></div>
+          </div>
+          <div style="display:flex;gap:16px;flex-wrap:wrap;">
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;border-radius:2px;background:var(--green)"></div><span style="font-family:var(--mono);font-size:10px;color:var(--text2)">Implemented <strong id="pb-impl-n">0</strong></span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;border-radius:2px;background:var(--yellow)"></div><span style="font-family:var(--mono);font-size:10px;color:var(--text2)">In Progress <strong id="pb-prog-n">0</strong></span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;border-radius:2px;background:var(--red)"></div><span style="font-family:var(--mono);font-size:10px;color:var(--text2)">Not Started <strong id="pb-ns-n">0</strong></span></div>
+            <div style="display:flex;align-items:center;gap:6px;"><div style="width:8px;height:8px;border-radius:2px;background:var(--purple)"></div><span style="font-family:var(--mono);font-size:10px;color:var(--text2)">N/A <strong id="pb-na-n">0</strong></span></div>
+            <div style="margin-left:auto;display:flex;gap:12px;align-items:center;">
+              <span id="storageInfo" style="font-family:var(--mono);font-size:9px;color:var(--text3);">Local storage: 0 KB</span>
+              <button class="btn btn-sm" onclick="exportBackup()" style="font-size:10px;padding:4px 9px;">⬇ Backup</button>
+              <button class="btn btn-sm" onclick="importBackup()" style="font-size:10px;padding:4px 9px;">⬆ Restore</button>
+              <button class="btn btn-sm btn-red" onclick="lsClear()" style="font-size:10px;padding:4px 9px;">🗑 Clear Data</button>
+            </div>
+          </div>
+        </div>
+
+        <div class="sec-head"><div class="sec-title">ATO Readiness by Family</div></div>
+        <div class="family-grid" id="familyAtoGrid"></div>
+      </div>
+
+      <!-- ══ CONTROLS PAGE ══════════════════════════════════ -->
+      <div class="page" id="page-controls">
+        <div class="ctrl-toolbar">
+          <div class="search-box">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/></svg>
+            <input type="text" id="searchInput" placeholder="Search ID, title, CCI, keyword… (S to focus)" oninput="renderControls()">
+          </div>
+          <select id="impactFilter" onchange="renderControls()">
+            <option value="">All Baselines</option>
+            <option value="low">LOW</option>
+            <option value="moderate">MODERATE</option>
+            <option value="high">HIGH</option>
+          </select>
+          <select id="statusFilter" onchange="renderControls()">
+            <option value="">All Statuses</option>
+            <option value="notstart">Not Started</option>
+            <option value="inprog">In Progress</option>
+            <option value="impl">Implemented</option>
+            <option value="na">N/A</option>
+            <option value="none">Untracked</option>
+          </select>
+          <select id="inhFilter" onchange="renderControls()">
+            <option value="">All Types</option>
+            <option value="sys">System-Specific</option>
+            <option value="hyb">Hybrid</option>
+            <option value="inh">Inherited</option>
+          </select>
+          <select id="overlayFilter" onchange="renderControls()">
+            <option value="">No Overlay</option>
+            <option value="fedramp">FedRAMP Mod</option>
+            <option value="dod">DoD IL2</option>
+            <option value="privacy">Privacy</option>
+          </select>
+          <button class="btn btn-sm" onclick="toggleBulkMode()" id="bulkModeBtn">☐ Select</button>
+        </div>
+
+        <div id="bulkBar">
+          <span class="bulk-count" id="bulkCount">0 selected</span>
+          <select id="bulkStatusSel" style="width:auto;">
+            <option value="">Set Status…</option>
+            <option value="notstart">Not Started</option>
+            <option value="inprog">In Progress</option>
+            <option value="impl">Implemented</option>
+            <option value="na">N/A</option>
+          </select>
+          <select id="bulkInhSel" style="width:auto;">
+            <option value="">Set Inheritance…</option>
+            <option value="sys">System-Specific</option>
+            <option value="hyb">Hybrid</option>
+            <option value="inh">Inherited</option>
+          </select>
+          <select id="bulkOwnerSel" style="width:auto;" id="bulkOwnerSel">
+            <option value="">Assign Owner…</option>
+          </select>
+          <button class="btn btn-sm btn-accent" onclick="applyBulk()">Apply</button>
+          <button class="btn btn-sm" onclick="clearSelection()">Clear</button>
+        </div>
+
+        <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:10px;" id="ctrlResultInfo"></div>
+        <div class="ctrl-grid" id="ctrlGrid"></div>
+        <div id="ctrlEmpty" style="display:none;text-align:center;padding:60px;color:var(--text3);font-family:var(--mono);font-size:11px;">No controls match your filters.</div>
+      </div>
+
+      <!-- ══ POA&M PAGE ══════════════════════════════════ -->
+      <div class="page" id="page-poam">
+        <div class="poam-toolbar">
+          <div class="sec-title">Plan of Action &amp; Milestones</div>
+          <div style="margin-left:auto;display:flex;gap:8px;">
+            <button class="btn btn-accent btn-sm" onclick="openPoamModal()">+ Add Finding</button>
+            <button class="btn btn-sm" onclick="exportPoamCSV()">Export CSV</button>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;">
+          <input type="text" id="poamSearch" placeholder="Search POA&M entries..." style="max-width:280px;" oninput="renderPoam()">
+          <select id="poamRiskFilter" onchange="renderPoam()">
+            <option value="">All Risk Levels</option>
+            <option value="high">High</option>
+            <option value="moderate">Moderate</option>
+            <option value="low">Low</option>
+          </select>
+          <select id="poamStatusFilter" onchange="renderPoam()">
+            <option value="">All Statuses</option>
+            <option value="open">Open</option>
+            <option value="closed">Closed</option>
+            <option value="delayed">Delayed</option>
+          </select>
+        </div>
+        <div class="poam-table-wrap">
+          <table id="poamTable">
+            <thead>
+              <tr>
+                <th>POA&M ID</th>
+                <th>Control</th>
+                <th>Finding / Weakness</th>
+                <th>Risk</th>
+                <th>Status</th>
+                <th>Responsible Party</th>
+                <th>Scheduled Completion</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody id="poamBody"></tbody>
+          </table>
+        </div>
+        <div id="poamEmpty" style="display:none;text-align:center;padding:40px;color:var(--text3);font-family:var(--mono);font-size:11px;">No POA&M entries yet. Click "+ Add Finding" to log a weakness.</div>
+      </div>
+
+      <!-- ══ OVERLAYS PAGE ══════════════════════════════════ -->
+      <div class="page" id="page-overlays">
+        <div class="sec-head">
+          <div>
+            <div class="sec-title">Control Overlays</div>
+            <div class="sec-sub">Apply compliance profiles to adjust baseline requirements</div>
+          </div>
+        </div>
+        <div class="overlay-grid">
+          <div class="overlay-card" id="ov-none" onclick="setOverlay('none',this)">
+            <div class="overlay-icon">📋</div>
+            <div class="overlay-name">NIST Baseline Only</div>
+            <div class="overlay-desc">Standard LOW / MODERATE / HIGH baselines per NIST SP 800-53 Rev 5 with no additional requirements.</div>
+          </div>
+          <div class="overlay-card" id="ov-fedramp" onclick="setOverlay('fedramp',this)">
+            <div class="overlay-icon">☁️</div>
+            <div class="overlay-name">FedRAMP Moderate</div>
+            <div class="overlay-desc">Federal Risk and Authorization Management Program overlay. Adds FedRAMP-specific parameter requirements and additional controls.</div>
+          </div>
+          <div class="overlay-card" id="ov-dod" onclick="setOverlay('dod',this)">
+            <div class="overlay-icon">🛡️</div>
+            <div class="overlay-name">DoD IL2 (CC SRG)</div>
+            <div class="overlay-desc">Department of Defense Cloud Computing SRG Impact Level 2 overlay with additional DoD-specific control requirements.</div>
+          </div>
+          <div class="overlay-card" id="ov-privacy" onclick="setOverlay('privacy',this)">
+            <div class="overlay-icon">🔏</div>
+            <div class="overlay-name">Privacy Overlay</div>
+            <div class="overlay-desc">Activates the PT family and privacy-related enhancements. Adds PII processing, transparency, and data minimization requirements.</div>
+          </div>
+          <div class="overlay-card" id="ov-classified" onclick="setOverlay('classified',this)">
+            <div class="overlay-icon">🔐</div>
+            <div class="overlay-name">Classified Systems</div>
+            <div class="overlay-desc">HIGH baseline with CNSS-aligned additions for systems processing classified national security information.</div>
+          </div>
+          <div class="overlay-card" id="ov-scif" onclick="setOverlay('scif',this)">
+            <div class="overlay-icon">🏛️</div>
+            <div class="overlay-name">SCIF / ICD 705</div>
+            <div class="overlay-desc">Sensitive Compartmented Information Facility overlay with physical security and access requirements per ICD 705.</div>
+          </div>
+        </div>
+        <div id="overlayDetails" style="background:var(--bg2);border:1px solid var(--border);border-radius:var(--r2);padding:20px;display:none;">
+          <div class="msec-lbl" id="overlayName"></div>
+          <div class="msec-text" id="overlayDesc" style="margin-bottom:14px;"></div>
+          <div id="overlayAddlControls"></div>
+        </div>
+      </div>
+
+      <!-- ══ USERS PAGE ══════════════════════════════════ -->
+      <div class="page" id="page-users">
+        <div class="sec-head">
+          <div class="sec-title">Team Management</div>
+          <div style="margin-left:auto;">
+            <button class="btn btn-accent btn-sm" onclick="openUserModal()">+ Add Member</button>
+          </div>
+        </div>
+        <div id="userList"></div>
+        <div id="userEmpty" style="display:none;text-align:center;padding:40px;color:var(--text3);font-family:var(--mono);font-size:11px;">No team members yet. Add your first member above.</div>
+      </div>
+
+    </div><!-- /content -->
+  </div><!-- /main -->
+</div><!-- /app -->
+
+<!-- ══ CONTROL DETAIL MODAL ══════════════════════════════ -->
+<div class="overlay" id="ctrlOverlay" onclick="handleCtrlOverlay(event)">
+<div class="modal">
+  <div class="modal-head">
+    <div class="modal-ctrl-id" id="m-id"></div>
+    <div>
+      <div class="modal-ctrl-title" id="m-title"></div>
+      <div class="modal-ctrl-family" id="m-family"></div>
+    </div>
+    <button class="modal-close" onclick="closeCtrlModal()">✕</button>
+  </div>
+  <div class="tabs" style="padding:0 22px;" id="ctrlTabs">
+    <div class="tab active" onclick="switchCtrlTab('overview')">Overview</div>
+    <div class="tab" onclick="switchCtrlTab('enhancements')">Enhancements <span id="enhCnt"></span></div>
+    <div class="tab" onclick="switchCtrlTab('cci')">CCIs <span id="cciCnt"></span></div>
+    <div class="tab" onclick="switchCtrlTab('stig')">STIG Findings <span id="stigCnt"></span></div>
+    <div class="tab" onclick="switchCtrlTab('cve')">CVEs</div>
+    <div class="tab" onclick="switchCtrlTab('tracking')">Tracking</div>
+    <div class="tab" onclick="switchCtrlTab('evidence')">Evidence</div>
+    <div class="tab" onclick="switchCtrlTab('history')">History</div>
+    <div class="tab" onclick="switchCtrlTab('ai')">AI Guidance</div>
+  </div>
+  <div class="modal-body" id="ctrlModalBody">
+    <!-- Overview -->
+    <div class="tab-panel active" id="tp-overview">
+      <div class="msec"><div class="msec-lbl">Description</div><div class="msec-text" id="m-desc"></div></div>
+      <div class="msec"><div class="msec-lbl">Supplemental Guidance</div><div class="msec-text" id="m-guid"></div></div>
+      <div class="msec"><div class="msec-lbl">Discussion</div><div class="msec-text" id="m-disc"></div></div>
+      <div class="msec"><div class="msec-lbl">Baseline Applicability</div><div id="m-impact" style="display:flex;gap:6px;flex-wrap:wrap;"></div></div>
+      <div class="msec"><div class="msec-lbl">Related Controls</div><div class="related-wrap" id="m-related"></div></div>
+    </div>
+    <!-- Enhancements -->
+    <div class="tab-panel" id="tp-enhancements"><div id="m-enhancements"></div></div>
+    <!-- CCIs -->
+    <div class="tab-panel" id="tp-cci">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:12px;">CCIs link this control to DISA STIGs and eMASS compliance artifacts.</div>
+      <div id="m-ccis"></div>
+    </div>
+    <!-- STIG -->
+    <div class="tab-panel" id="tp-stig">
+      <div style="display:flex;gap:8px;margin-bottom:14px;">
+        <button class="btn btn-accent btn-sm" onclick="openStigModal()">+ Log STIG Finding</button>
+      </div>
+      <div id="m-stigs"></div>
+    </div>
+    <!-- CVE -->
+    <div class="tab-panel" id="tp-cve">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:12px;">Relevant CVEs based on control family and common implementation technologies.</div>
+      <div id="m-cves"></div>
+    </div>
+    <!-- Tracking -->
+    <div class="tab-panel" id="tp-tracking">
+      <div class="msec">
+        <div class="msec-lbl">Implementation Status</div>
+        <div class="status-row" id="m-sts-row"></div>
+      </div>
+      <div class="msec">
+        <div class="msec-lbl">Inheritance Type</div>
+        <div class="inh-row" id="m-inh-row"></div>
+      </div>
+      <div class="msec">
+        <div class="msec-lbl">Control Owner</div>
+        <select id="m-owner-sel" onchange="saveOwner()" style="max-width:300px;"></select>
+      </div>
+      <div class="msec">
+        <div class="msec-lbl">Add Comment / Note</div>
+        <div style="display:flex;gap:8px;margin-bottom:10px;">
+          <input type="text" id="m-comment-input" placeholder="Add implementation note, evidence reference, or status update..." style="flex:1;">
+          <button class="btn btn-accent btn-sm" onclick="addComment()">Post</button>
+        </div>
+        <div class="comment-feed" id="m-comments"></div>
+      </div>
+    </div>
+    <!-- Evidence -->
+    <div class="tab-panel" id="tp-evidence">
+      <div style="background:var(--bg3);border:1px solid var(--border);border-radius:var(--r);padding:14px;margin-bottom:14px;">
+        <div class="msec-lbl" style="margin-bottom:10px;">Attach Evidence Artifact</div>
+        <div class="form-grid" style="margin-bottom:10px;">
+          <div class="form-row" style="margin:0;"><label>Name / Description</label><input type="text" id="evid-name" placeholder="e.g. Screenshot of MFA config"></div>
+          <div class="form-row" style="margin:0;"><label>URL / Path (optional)</label><input type="text" id="evid-url" placeholder="https://... or \\server\share\..."></div>
+        </div>
+        <button class="btn btn-accent btn-sm" onclick="addEvidence()">Attach</button>
+      </div>
+      <div id="m-evidence"></div>
+      <div style="margin-top:14px;">
+        <div class="msec-lbl">Suggested Evidence Artifacts</div>
+        <div id="m-evid-suggest" style="font-size:11px;color:var(--text3);line-height:2.2;"></div>
+      </div>
+    </div>
+    <!-- History -->
+    <div class="tab-panel" id="tp-history">
+      <div style="font-family:var(--mono);font-size:10px;color:var(--text3);margin-bottom:12px;">Full audit trail of all changes to this control.</div>
+      <div id="m-history"></div>
+    </div>
+    <!-- AI -->
+    <div class="tab-panel" id="tp-ai">
+      <div class="ai-panel">
+        <div class="ai-header"><div class="ai-pulse"></div><div class="ai-lbl">AI GUIDANCE ASSISTANT</div></div>
+        <div class="ai-chips" id="ai-chips"></div>
+        <div class="ai-row">
+          <input class="ai-input" type="text" id="ai-q" placeholder="Ask about implementation, evidence, STIG correlation, POA&M...">
+          <button class="ai-go" id="ai-go-btn" onclick="askAI()">Ask</button>
+        </div>
+        <div class="ai-thinking" id="ai-thinking">Analyzing</div>
+        <div class="ai-resp" id="ai-resp">
+          <div class="ai-resp-lbl">// AI RESPONSE</div>
+          <div class="ai-resp-text" id="ai-resp-text"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ POAM MODAL ══════════════════════════════════ -->
+<div class="overlay" id="poamOverlay" onclick="if(event.target===this)closePoamModal()">
+<div class="modal" style="max-width:640px;">
+  <div class="modal-head">
+    <div style="font-size:15px;font-weight:700;" id="poamModalTitle">Add POA&M Finding</div>
+    <button class="modal-close" onclick="closePoamModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-row"><label>Related Control</label>
+      <select id="pf-ctrl"><option value="">Select control...</option></select>
+    </div>
+    <div class="form-row"><label>Finding / Weakness Description</label>
+      <textarea id="pf-desc" rows="3" placeholder="Describe the security weakness or audit finding..."></textarea>
+    </div>
+    <div class="form-grid">
+      <div class="form-row" style="margin:0;"><label>Risk Level</label>
+        <select id="pf-risk"><option value="high">High</option><option value="moderate" selected>Moderate</option><option value="low">Low</option></select>
+      </div>
+      <div class="form-row" style="margin:0;"><label>Status</label>
+        <select id="pf-status"><option value="open">Open</option><option value="closed">Closed</option><option value="delayed">Delayed</option></select>
+      </div>
+    </div>
+    <div class="form-grid" style="margin-top:12px;">
+      <div class="form-row" style="margin:0;"><label>Responsible Party</label>
+        <input type="text" id="pf-party" placeholder="Name or team..."></div>
+      <div class="form-row" style="margin:0;"><label>Scheduled Completion</label>
+        <input type="date" id="pf-date"></div>
+    </div>
+    <div class="form-row" style="margin-top:12px;"><label>Remediation Plan</label>
+      <textarea id="pf-plan" rows="2" placeholder="Describe the planned remediation steps..."></textarea>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:16px;">
+      <button class="btn btn-sm" onclick="closePoamModal()">Cancel</button>
+      <button class="btn btn-accent btn-sm" onclick="savePoam()">Save Finding</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ STIG MODAL ══════════════════════════════════ -->
+<div class="overlay" id="stigOverlay" onclick="if(event.target===this)closeStigModal()">
+<div class="modal" style="max-width:560px;">
+  <div class="modal-head">
+    <div style="font-size:15px;font-weight:700;">Log STIG Finding</div>
+    <button class="modal-close" onclick="closeStigModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-grid">
+      <div class="form-row" style="margin:0;"><label>STIG Rule / Vuln ID</label><input type="text" id="sf-id" placeholder="V-XXXXXX / SV-XXXXXX"></div>
+      <div class="form-row" style="margin:0;"><label>CAT Level</label>
+        <select id="sf-cat"><option value="cat1">CAT I (High)</option><option value="cat2" selected>CAT II (Medium)</option><option value="cat3">CAT III (Low)</option></select>
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:12px;"><label>Title</label><input type="text" id="sf-title" placeholder="STIG check title..."></div>
+    <div class="form-row"><label>Finding Details</label><textarea id="sf-details" rows="3" placeholder="Describe the STIG finding..."></textarea></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:12px;">
+      <button class="btn btn-sm" onclick="closeStigModal()">Cancel</button>
+      <button class="btn btn-accent btn-sm" onclick="saveStig()">Save Finding</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- ══ USER MODAL ══════════════════════════════════ -->
+<div class="overlay" id="userOverlay" onclick="if(event.target===this)closeUserModal()">
+<div class="modal" style="max-width:480px;">
+  <div class="modal-head">
+    <div style="font-size:15px;font-weight:700;">Add Team Member</div>
+    <button class="modal-close" onclick="closeUserModal()">✕</button>
+  </div>
+  <div class="modal-body">
+    <div class="form-grid">
+      <div class="form-row" style="margin:0;"><label>Full Name</label><input type="text" id="u-name" placeholder="Jane Doe"></div>
+      <div class="form-row" style="margin:0;"><label>Role</label>
+        <select id="u-role">
+          <option>ISSO</option><option>ISSM</option><option>AO</option><option>System Owner</option>
+          <option>Security Engineer</option><option>DevSecOps</option><option>Assessor</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row" style="margin-top:12px;"><label>Email</label><input type="email" id="u-email" placeholder="jane@agency.gov"></div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:14px;">
+      <button class="btn btn-sm" onclick="closeUserModal()">Cancel</button>
+      <button class="btn btn-accent btn-sm" onclick="saveUser()">Add Member</button>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- Keyboard shortcuts -->
+<div id="kbHelp">
+  <div class="kb-modal">
+    <div class="kb-title">Keyboard Shortcuts</div>
+    <div class="kb-row"><div class="kb-desc">Focus search</div><div class="kb-keys"><span class="kbd">S</span></div></div>
+    <div class="kb-row"><div class="kb-desc">Open next control</div><div class="kb-keys"><span class="kbd">J</span></div></div>
+    <div class="kb-row"><div class="kb-desc">Open previous control</div><div class="kb-keys"><span class="kbd">K</span></div></div>
+    <div class="kb-row"><div class="kb-desc">Close modal</div><div class="kb-keys"><span class="kbd">Esc</span></div></div>
+    <div class="kb-row"><div class="kb-desc">Go to Dashboard</div><div class="kb-keys"><span class="kbd">1</span></div></div>
+    <div class="kb-row"><div class="kb-desc">Go to Controls</div><div class="kb-keys"><span class="kbd">2</span></div></div>
+    <div class="kb-row"><div class="kb-desc">Go to POA&M</div><div class="kb-keys"><span class="kbd">3</span></div></div>
+    <div class="kb-row"><div class="kb-desc">Toggle bulk select</div><div class="kb-keys"><span class="kbd">B</span></div></div>
+    <div class="kb-row"><div class="kb-desc">Show this help</div><div class="kb-keys"><span class="kbd">?</span></div></div>
+    <div style="margin-top:14px;text-align:center;"><button class="btn btn-sm" onclick="toggleKB()">Close</button></div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════════════════════════════
+const FAMILIES=[
+  {code:"AC",name:"Access Control"},{code:"AT",name:"Awareness and Training"},
+  {code:"AU",name:"Audit and Accountability"},{code:"CA",name:"Assessment, Authorization, and Monitoring"},
+  {code:"CM",name:"Configuration Management"},{code:"CP",name:"Contingency Planning"},
+  {code:"IA",name:"Identification and Authentication"},{code:"IR",name:"Incident Response"},
+  {code:"MA",name:"Maintenance"},{code:"MP",name:"Media Protection"},
+  {code:"PE",name:"Physical and Environmental Protection"},{code:"PL",name:"Planning"},
+  {code:"PM",name:"Program Management"},{code:"PS",name:"Personnel Security"},
+  {code:"PT",name:"PII Processing and Transparency"},{code:"RA",name:"Risk Assessment"},
+  {code:"SA",name:"System and Services Acquisition"},{code:"SC",name:"System and Communications Protection"},
+  {code:"SI",name:"System and Information Integrity"},{code:"SR",name:"Supply Chain Risk Management"},
+];
+
+// Sample CVEs by control family
+const CVE_MAP = {
+  AC:[{id:"CVE-2023-44487",score:"7.5",sev:"HIGH",desc:"HTTP/2 Rapid Reset Attack — can bypass rate limiting and access controls in web servers."},
+      {id:"CVE-2021-44228",score:"10.0",sev:"CRITICAL",desc:"Log4Shell — allows unauthenticated remote code execution, bypassing access controls."}],
+  AU:[{id:"CVE-2022-42889",score:"9.8",sev:"CRITICAL",desc:"Apache Commons Text injection can disable audit logging mechanisms in affected apps."}],
+  IA:[{id:"CVE-2023-2868",score:"9.8",sev:"CRITICAL",desc:"Barracuda ESG — auth bypass allowing unauthenticated access. Directly undermines IA controls."},
+      {id:"CVE-2022-26134",score:"9.8",sev:"CRITICAL",desc:"Confluence OGNL injection — authentication bypass allowing unauthorized access."}],
+  CM:[{id:"CVE-2023-46747",score:"9.8",sev:"CRITICAL",desc:"F5 BIG-IP — unauthenticated RCE due to misconfiguration in iControl REST API."}],
+  SC:[{id:"CVE-2023-23397",score:"9.8",sev:"CRITICAL",desc:"Microsoft Outlook — NTLM hash theft via crafted email, undermining transport security."},
+      {id:"CVE-2022-30190",score:"7.8",sev:"HIGH",desc:"Follina/MSDT — remote code execution via protocol handler, bypasses communication protections."}],
+  SI:[{id:"CVE-2021-34527",score:"8.8",sev:"HIGH",desc:"PrintNightmare — privilege escalation via Windows Print Spooler, undermines system integrity."}],
+};
+
+const CONTROLS = [
+  {id:"AC-1",title:"Policy and Procedures",family:"AC",desc:"Develop, document, and disseminate access control policy and procedures addressing purpose, scope, roles, responsibilities, management commitment, coordination, and compliance.",guidance:"Access control policy and procedures address the controls in the AC family. The risk management strategy is an important factor in establishing such policies and procedures.",discussion:"Organizations develop policies and procedures as part of the broader security and privacy program governance structure. Policies can be developed at the organization level and revised at the system level as needed.",impact:["low","moderate","high"],related:["PM-9","PS-8","SI-12"],evidence:["Written policy document","Procedure documents","Management approval memo","Annual review records"],enhancements:[],ccis:[{id:"CCI-000001",def:"The organization develops an access control policy that addresses purpose, scope, roles, responsibilities, management commitment, coordination, and compliance.",ap:"AC-1 a 1"},{id:"CCI-000002",def:"The organization disseminates an access control policy to personnel with access control responsibilities.",ap:"AC-1 a 1"},{id:"CCI-000003",def:"The organization reviews and updates the access control policy at an organization-defined frequency.",ap:"AC-1 a 2"}],stigs:[]},
+
+  {id:"AC-2",title:"Account Management",family:"AC",desc:"Manage system accounts including identifying and selecting account types; assigning account managers; requiring approval for account creation; specifying authorized users and access authorizations; managing accounts; monitoring account usage; notifying managers of accounts no longer required; reviewing accounts for compliance.",guidance:"Account management includes determining account types, establishing conditions for group and role membership, and implementing account management. Organizations consider account management throughout the SDLC.",discussion:"Selected account types include individual, shared, group, system, guest, anonymous, emergency, developer, temporary, and service accounts.",impact:["low","moderate","high"],related:["AC-3","AC-5","AC-6","AC-17","IA-2","IA-4","IA-5","PS-4"],evidence:["Account inventory/register","Account creation approval records","Quarterly account review documentation","Automated account management tool logs","Inactive account reports"],enhancements:[{id:"AC-2(1)",title:"Automated System Account Management",desc:"Support the management of system accounts using automated mechanisms.",baseline:["moderate","high"]},{id:"AC-2(2)",title:"Automated Temporary and Emergency Account Management",desc:"Automatically remove or disable temporary and emergency accounts after a defined time period.",baseline:["moderate","high"]},{id:"AC-2(3)",title:"Disable Accounts",desc:"Disable accounts within an organization-defined time period when accounts expire or users are no longer associated with the organization.",baseline:["moderate","high"]},{id:"AC-2(4)",title:"Automated Audit Actions",desc:"Automatically audit account creation, modification, enabling, disabling, and removal actions.",baseline:["high"]},{id:"AC-2(12)",title:"Account Monitoring for Atypical Usage",desc:"Monitor system accounts for atypical usage and report to organization-defined personnel.",baseline:["high"]},{id:"AC-2(13)",title:"Disable Accounts for High-risk Individuals",desc:"Disable accounts of users posing a significant risk within a defined time period of discovery.",baseline:["high"]}],ccis:[{id:"CCI-000004",def:"The organization manages information system accounts by identifying account types required to support organizational missions.",ap:"AC-2 a"},{id:"CCI-000005",def:"The organization assigns account managers for information system accounts.",ap:"AC-2 b"},{id:"CCI-000006",def:"The organization establishes conditions for group and role membership.",ap:"AC-2 c"},{id:"CCI-000015",def:"The organization reviews accounts for compliance with account management requirements.",ap:"AC-2 j"}],stigs:[]},
+
+  {id:"AC-3",title:"Access Enforcement",family:"AC",desc:"Enforce approved authorizations for logical access to information and system resources in accordance with applicable access control policies.",guidance:"Access control policies include identity-based policies, role-based policies, and attribute-based policies. Access enforcement mechanisms can be employed at the application and service level.",discussion:"Access enforcement mechanisms can be implemented within the system or inherited from supporting infrastructure.",impact:["low","moderate","high"],related:["AC-2","AC-4","AC-5","AC-6","AU-9","CM-5","PE-3"],evidence:["Access control policy","RBAC role definitions","Audit logs showing access enforcement","Privileged access review records"],enhancements:[{id:"AC-3(7)",title:"Role-Based Access Control",desc:"Enforce a role-based access control policy over defined subjects and objects.",baseline:["moderate","high"]},{id:"AC-3(10)",title:"Audited Override of Access Control Mechanisms",desc:"Employ an audited override of automated access control mechanisms under defined conditions.",baseline:["high"]}],ccis:[{id:"CCI-000213",def:"The information system enforces approved authorizations for logical access to the system in accordance with applicable access control policies.",ap:"AC-3"}],stigs:[]},
+
+  {id:"AC-4",title:"Information Flow Enforcement",family:"AC",desc:"Enforce approved authorizations for controlling the flow of information within the system and between connected systems based on applicable policy.",guidance:"Information flow control regulates where information is allowed to travel within a system and between systems versus who is allowed to access the information.",discussion:"Information flow control policies and enforcement mechanisms govern the flow between designated sources and destinations within systems and between interconnected systems.",impact:["moderate","high"],related:["AC-17","AC-19","CM-6","CM-7","SC-7","SC-16"],evidence:["Data flow diagrams","Firewall rule sets","DLP policy configuration","Network segmentation documentation"],enhancements:[{id:"AC-4(4)",title:"Flow Control of Encrypted Information",desc:"Prevent encrypted information from bypassing content-checking mechanisms.",baseline:["high"]},{id:"AC-4(8)",title:"Security and Privacy Policy Filters",desc:"Enforce information flow control using defined security or privacy policy filters.",baseline:["high"]}],ccis:[{id:"CCI-001368",def:"The information system enforces approved authorizations for controlling the flow of information within the system and between interconnected systems.",ap:"AC-4"}],stigs:[]},
+
+  {id:"AC-6",title:"Least Privilege",family:"AC",desc:"Employ the concept of least privilege, allowing only authorized accesses for users (or processes acting on behalf of users) that are necessary to accomplish assigned tasks.",guidance:"Organizations employ least privilege for specific duties and information systems. The principle is also applied to system processes.",discussion:"Least privilege is applied most stringently to mission-critical systems.",impact:["moderate","high"],related:["AC-2","AC-3","AC-5","AU-9","CM-5","CM-6","CM-7","IA-2"],evidence:["Least privilege policy","Privileged account inventory","Privilege access reviews","Admin rights audit reports"],enhancements:[{id:"AC-6(1)",title:"Authorize Access to Security Functions",desc:"Authorize access to security functions only to authorized individuals.",baseline:["moderate","high"]},{id:"AC-6(2)",title:"Non-Privileged Access for Non-Privileged Functions",desc:"Require users with privileged accounts to use non-privileged accounts for non-security functions.",baseline:["moderate","high"]},{id:"AC-6(5)",title:"Privileged Accounts",desc:"Restrict privileged accounts to defined personnel or roles.",baseline:["moderate","high"]},{id:"AC-6(9)",title:"Log Use of Privileged Functions",desc:"Log the execution of privileged functions.",baseline:["moderate","high"]},{id:"AC-6(10)",title:"Prohibit Non-Privileged Users from Executing Privileged Functions",desc:"Prevent non-privileged users from executing privileged functions.",baseline:["moderate","high"]}],ccis:[{id:"CCI-000034",def:"The organization employs the concept of least privilege, allowing only authorized accesses necessary to accomplish assigned tasks.",ap:"AC-6"}],stigs:[]},
+
+  {id:"AC-7",title:"Unsuccessful Logon Attempts",family:"AC",desc:"Enforce a limit of consecutive invalid logon attempts by a user; automatically lock the account or node for a defined time period or until released by an administrator.",guidance:"Due to the potential for denial-of-service attacks, automatic lockouts are usually temporary and automatically release after a time period established by the organization.",discussion:"The need to protect against consecutive invalid logon attempts is primarily applicable to single-factor authentication systems.",impact:["low","moderate","high"],related:["AC-2","AU-2","IA-5","SI-4"],evidence:["System lockout configuration","Password policy documentation","Account lockout event logs"],enhancements:[{id:"AC-7(1)",title:"Automatic Account Lock",desc:"Employ an automatic account lock until released by an administrator.",baseline:["high"]}],ccis:[{id:"CCI-000044",def:"The information system enforces a limit of consecutive invalid access attempts by a user during a defined time period.",ap:"AC-7 a"}],stigs:[]},
+
+  {id:"AC-17",title:"Remote Access",family:"AC",desc:"Establish and document usage restrictions, configuration and connection requirements, and implementation guidance for remote access; authorize remote access prior to allowing such connections.",guidance:"Remote access is access to organizational systems by users communicating through external networks. Encrypted VPNs do not make access non-remote.",discussion:"Organizations consider the security risks of remote access methods and manage them appropriately.",impact:["low","moderate","high"],related:["AC-2","AC-3","AC-4","IA-2","IA-3","MA-4","SC-10","SI-4"],evidence:["Remote access policy","VPN configuration","Remote access logs","MFA for remote access"],enhancements:[{id:"AC-17(1)",title:"Monitoring and Control",desc:"Employ automated mechanisms to monitor and control remote access methods.",baseline:["moderate","high"]},{id:"AC-17(2)",title:"Protection Using Encryption",desc:"Implement cryptographic mechanisms to protect the confidentiality and integrity of remote access sessions.",baseline:["moderate","high"]},{id:"AC-17(3)",title:"Managed Access Control Points",desc:"Route remote accesses via managed network access control points.",baseline:["moderate","high"]},{id:"AC-17(4)",title:"Privileged Commands and Access",desc:"Authorize execution of privileged commands via remote access only for documented operational needs.",baseline:["moderate","high"]}],ccis:[{id:"CCI-000068",def:"The information system implements cryptographic mechanisms to protect the confidentiality of remote access sessions.",ap:"AC-17 2"},{id:"CCI-001453",def:"The information system implements cryptographic mechanisms to protect the integrity of remote access sessions.",ap:"AC-17 2"}],stigs:[]},
+
+  {id:"AU-2",title:"Event Logging",family:"AU",desc:"Identify the types of events that the system is capable of logging in support of the audit function; coordinate event logging with other organizations; specify event types for logging within the system.",guidance:"Organizations identify which events need to be logged to support the audit function.",discussion:"Organizations determine events to log based on risk, event type, and regulatory requirements.",impact:["low","moderate","high"],related:["AC-6","AU-3","AU-4","AU-5","AU-6","AU-12","CM-5","SI-4"],evidence:["Audit event policy","System audit configuration","Log review procedures"],enhancements:[{id:"AU-2(3)",title:"Reviews and Updates",desc:"Review and update the event types selected for logging.",baseline:["high"]}],ccis:[{id:"CCI-000130",def:"The information system generates audit records containing information that establishes what type of event occurred.",ap:"AU-2"},{id:"CCI-000172",def:"The information system generates audit records for the events defined in AU-2.",ap:"AU-2"}],stigs:[]},
+
+  {id:"AU-3",title:"Content of Audit Records",family:"AU",desc:"Ensure audit records contain: what type of event occurred, when it occurred, where, the source, the outcome, and the identity of individuals associated with the event.",guidance:"Audit record content includes timestamps, source/destination addresses, user/process identifiers, event descriptions, and success/fail indications.",discussion:"Audit record content provides information needed to support after-the-fact analysis of security incidents.",impact:["low","moderate","high"],related:["AU-2","AU-7","AU-8","AU-9","AU-12","MA-4","SI-7"],evidence:["Sample audit log outputs","Log format documentation","Timestamp synchronization records"],enhancements:[{id:"AU-3(1)",title:"Additional Audit Information",desc:"Generate audit records containing additional organization-defined information.",baseline:["moderate","high"]},{id:"AU-3(2)",title:"Centralized Management of Planned Audit Record Content",desc:"Centrally manage the content of audit records generated by system components.",baseline:["high"]}],ccis:[{id:"CCI-000131",def:"The information system generates audit records containing information that establishes when an event occurred.",ap:"AU-3"},{id:"CCI-000132",def:"The information system generates audit records containing information that establishes where the event occurred.",ap:"AU-3"},{id:"CCI-000133",def:"The information system generates audit records containing information that establishes the source of the event.",ap:"AU-3"}],stigs:[]},
+
+  {id:"AU-6",title:"Audit Record Review, Analysis, and Reporting",family:"AU",desc:"Review and analyze system audit records for indications of inappropriate or unusual activity; report findings to designated personnel; adjust the level of review when risk changes.",guidance:"Audit record review and analysis can be automated using pattern matching, trending, or anomaly detection.",discussion:"Reviews and analysis of audit records can be undertaken using manual processes or automated tools.",impact:["low","moderate","high"],related:["AC-2","AU-7","CA-7","IR-5","SI-3","SI-4"],evidence:["Log review procedures","SIEM alerts and reports","Anomaly detection records","Weekly/monthly log review documentation"],enhancements:[{id:"AU-6(1)",title:"Automated Process Integration",desc:"Integrate audit record review, analysis, and reporting using automated mechanisms.",baseline:["moderate","high"]},{id:"AU-6(3)",title:"Correlate Audit Record Repositories",desc:"Analyze and correlate audit records across different repositories for organization-wide situational awareness.",baseline:["high"]},{id:"AU-6(5)",title:"Integrated Analysis",desc:"Integrate analysis of audit records with vulnerability scanning, performance data, and system monitoring.",baseline:["high"]}],ccis:[{id:"CCI-000139",def:"The organization reviews and analyzes information system audit records at a defined frequency for indications of inappropriate or unusual activity.",ap:"AU-6 a"},{id:"CCI-000140",def:"The organization reports findings to defined personnel or roles.",ap:"AU-6 b"}],stigs:[]},
+
+  {id:"CA-2",title:"Control Assessments",family:"CA",desc:"Select the appropriate assessor or assessment team; develop a control assessment plan; assess controls to determine if they are implemented correctly and producing the desired outcome.",guidance:"Organizations assess the security and privacy controls in systems and environments as part of the authorization process.",discussion:"Control assessments ensure controls are correctly implemented, operating as intended, and producing the desired outcome.",impact:["low","moderate","high"],related:["CA-5","CA-6","CA-7","RA-5","SA-11"],evidence:["Security assessment plan","Assessment results reports","Control test evidence","Assessor independence documentation"],enhancements:[{id:"CA-2(1)",title:"Independent Assessors",desc:"Employ independent assessors to conduct control assessments.",baseline:["moderate","high"]},{id:"CA-2(2)",title:"Specialized Assessments",desc:"Include announced/unannounced in-depth assessments and red team exercises.",baseline:["high"]}],ccis:[{id:"CCI-000238",def:"The organization employs an independent assessor to assess the security controls in the information system.",ap:"CA-2 1"}],stigs:[]},
+
+  {id:"CA-7",title:"Continuous Monitoring",family:"CA",desc:"Develop a system-level continuous monitoring strategy; establish monitoring metrics and frequencies; perform ongoing assessments; respond to issues identified through continuous monitoring.",guidance:"Continuous monitoring facilitates ongoing awareness of system security posture to support organizational risk management decisions.",discussion:"ConMon programs facilitate ongoing awareness of threats, vulnerabilities, and security posture.",impact:["low","moderate","high"],related:["AC-2","AU-6","CA-2","CA-5","CM-3","CM-6","RA-5","SI-2","SI-4"],evidence:["Continuous monitoring plan","ISCM metrics","Ongoing assessment results","ConMon dashboard/reports"],enhancements:[{id:"CA-7(1)",title:"Independent Assessment",desc:"Employ independent assessors to monitor the security controls on an ongoing basis.",baseline:["high"]}],ccis:[{id:"CCI-000243",def:"The organization develops a continuous monitoring strategy.",ap:"CA-7"},{id:"CCI-000250",def:"The organization implements a continuous monitoring program.",ap:"CA-7"}],stigs:[]},
+
+  {id:"CM-2",title:"Baseline Configuration",family:"CM",desc:"Develop, document, and maintain under configuration control a current baseline configuration of the system; review and update the baseline when required.",guidance:"Baseline configurations are documented, formally reviewed, and agreed-upon sets of specifications for information systems.",discussion:"Baseline configurations include information about system components, network topology, and the logical placement of system components.",impact:["low","moderate","high"],related:["CM-3","CM-6","CM-8","CM-9","SA-10"],evidence:["System baseline configuration documentation","Change management records","Configuration management tool reports"],enhancements:[{id:"CM-2(2)",title:"Automation Support",desc:"Maintain currency and accuracy of the baseline configuration using automated mechanisms.",baseline:["moderate","high"]},{id:"CM-2(3)",title:"Retention of Previous Configurations",desc:"Retain previous versions of baseline configurations to support rollback.",baseline:["moderate","high"]}],ccis:[{id:"CCI-000044",def:"The organization develops, documents, and maintains under configuration control a current baseline configuration.",ap:"CM-2"}],stigs:[]},
+
+  {id:"CM-6",title:"Configuration Settings",family:"CM",desc:"Establish and document configuration settings reflecting the most restrictive mode; implement settings; identify, document, and approve deviations; monitor and control changes.",guidance:"Configuration settings are parameters that can be changed in hardware, software, or firmware that affect the security posture.",discussion:"Organizations establish configuration settings consistent with USGCB and DISA STIGs.",impact:["low","moderate","high"],related:["AC-19","CM-2","CM-3","CM-7","IA-3","SI-2"],evidence:["STIG/USGCB benchmark scan results","Configuration management tool reports","Deviation/exception documentation","CIS benchmark audit reports"],enhancements:[{id:"CM-6(1)",title:"Automated Management and Verification",desc:"Manage, apply, and verify configuration settings using automated mechanisms.",baseline:["high"]},{id:"CM-6(2)",title:"Respond to Unauthorized Changes",desc:"Take defined actions in response to unauthorized changes to configuration settings.",baseline:["high"]}],ccis:[{id:"CCI-000366",def:"The organization establishes and documents configuration settings that reflect the most restrictive mode consistent with operational requirements.",ap:"CM-6 a"},{id:"CCI-000370",def:"The organization identifies, documents, and approves exceptions from established configuration settings.",ap:"CM-6 c"}],stigs:[]},
+
+  {id:"CM-7",title:"Least Functionality",family:"CM",desc:"Configure the system to provide only essential capabilities; prohibit or restrict functions, ports, protocols, and services not required; review and disable unnecessary or non-secure services.",guidance:"Systems can be configured to provide a subset of available functions and services.",discussion:"Least functionality is applied through use of security configuration checklists.",impact:["low","moderate","high"],related:["AC-3","CM-2","CM-6","RA-5","SC-37"],evidence:["Port scan results","Unnecessary service review","Firewall rules","STIG scan results"],enhancements:[{id:"CM-7(1)",title:"Periodic Review",desc:"Periodically review the system to identify unnecessary functions, ports, protocols, and services.",baseline:["moderate","high"]},{id:"CM-7(5)",title:"Authorized Software — Allow-by-Exception",desc:"Identify and authorize software through an allow-all, deny-by-exception policy.",baseline:["moderate","high"]}],ccis:[{id:"CCI-000381",def:"The organization configures the information system to provide only essential capabilities.",ap:"CM-7 a"}],stigs:[]},
+
+  {id:"CM-8",title:"System Component Inventory",family:"CM",desc:"Develop and document an inventory of system components that accurately reflects the system; is at the level of granularity necessary for tracking; is available for review by designated officials; is reviewed and updated at a defined frequency.",guidance:"Organizations develop and use trusted methods to develop inventories of their systems.",discussion:"System component inventories do not have to be custom developed if established inventories are available.",impact:["low","moderate","high"],related:["CM-2","CM-7","CM-9","MA-2","RA-9","SA-4","SA-5","SI-2"],evidence:["System component inventory","Asset management tool output","Automated discovery scan results","Inventory review records"],enhancements:[{id:"CM-8(1)",title:"Updates During Installation and Removal",desc:"Update the inventory as an integral part of component installations, removals, and system updates.",baseline:["moderate","high"]},{id:"CM-8(3)",title:"Automated Unauthorized Component Detection",desc:"Detect unauthorized components in the system using automated mechanisms.",baseline:["high"]}],ccis:[{id:"CCI-000500",def:"The organization develops and documents an inventory of information system components that accurately reflects the current system.",ap:"CM-8"}],stigs:[]},
+
+  {id:"IA-2",title:"Identification and Authentication (Organizational Users)",family:"IA",desc:"Uniquely identify and authenticate organizational users and associate that unique identification with processes acting on behalf of those users.",guidance:"Organizations can satisfy requirements by complying with HSPD 12 requirements. Authentication is accomplished through passwords, physical authenticators, biometrics, or combinations.",discussion:"Authentication of organizational users is required before access is granted.",impact:["low","moderate","high"],related:["AC-2","AC-3","AC-14","IA-4","IA-5","IA-8","MA-4"],evidence:["MFA configuration documentation","User authentication logs","PIV/CAC implementation records","Identity federation documentation"],enhancements:[{id:"IA-2(1)",title:"Multi-Factor Authentication to Privileged Accounts",desc:"Implement multi-factor authentication for access to privileged accounts.",baseline:["moderate","high"]},{id:"IA-2(2)",title:"Multi-Factor Authentication to Non-Privileged Accounts",desc:"Implement multi-factor authentication for access to non-privileged accounts.",baseline:["moderate","high"]},{id:"IA-2(8)",title:"Access to Accounts — Replay Resistant",desc:"Implement replay-resistant authentication mechanisms for access to privileged accounts.",baseline:["moderate","high"]},{id:"IA-2(12)",title:"Acceptance of PIV Credentials",desc:"Accept and electronically verify Personal Identity Verification-compliant credentials.",baseline:["moderate","high"]}],ccis:[{id:"CCI-000765",def:"The information system uniquely identifies and authenticates organizational users.",ap:"IA-2"},{id:"CCI-000766",def:"The information system uses multifactor authentication for network access to privileged accounts.",ap:"IA-2 1"},{id:"CCI-000767",def:"The information system uses multifactor authentication for network access to non-privileged accounts.",ap:"IA-2 2"}],stigs:[]},
+
+  {id:"IA-5",title:"Authenticator Management",family:"IA",desc:"Manage system authenticators: verify identity before issuing; establish initial authenticator content; ensure sufficient strength; establish administrative procedures for initial distribution, lost/compromised, and revocation.",guidance:"Authenticators include passwords, cryptographic devices, biometrics, certificates, one-time passwords, and ID badges.",discussion:"Authenticator management covers the entire lifecycle.",impact:["low","moderate","high"],related:["AC-3","IA-2","IA-4","IA-7","IA-8","SC-12","SC-13"],evidence:["Password policy","MFA enrollment records","Certificate management procedures","Authenticator lifecycle documentation"],enhancements:[{id:"IA-5(1)",title:"Password-Based Authentication",desc:"Enforce minimum password complexity and change requirements; prohibit reuse; use cryptography to store passwords.",baseline:["low","moderate","high"]},{id:"IA-5(2)",title:"Public Key-Based Authentication",desc:"Require certificate path to accepted trust anchor; enforce authorized access to the private key.",baseline:["moderate","high"]}],ccis:[{id:"CCI-000192",def:"The information system enforces minimum password complexity.",ap:"IA-5 1 a"},{id:"CCI-000193",def:"The information system enforces a minimum number of characters changed before creating a new password.",ap:"IA-5 1 b"},{id:"CCI-000196",def:"The information system stores only cryptographically-protected passwords.",ap:"IA-5 1 c"}],stigs:[]},
+
+  {id:"RA-3",title:"Risk Assessment",family:"RA",desc:"Conduct a risk assessment including likelihood and magnitude of harm from unauthorized access, use, disclosure, disruption, modification, or destruction of the system; document results; review at a defined frequency; update when significant changes occur.",guidance:"Risk assessments take into account vulnerabilities, threat sources and events, and the likelihood and magnitude of harm.",discussion:"Risk assessments are updated prior to authorization of significant changes.",impact:["low","moderate","high"],related:["CA-3","CA-6","CA-7","CM-4","CP-6","PE-3","PL-2","RA-2","RA-5","SA-8","SA-9"],evidence:["Risk assessment report","Threat model documentation","Risk register","Risk assessment review records"],enhancements:[{id:"RA-3(1)",title:"Supply Chain Risk Assessment",desc:"Assess supply chain risks associated with defined systems, system components, and system services.",baseline:["high"]}],ccis:[{id:"CCI-002696",def:"The organization conducts an assessment of risk including the likelihood and magnitude of harm from unauthorized access, use, disclosure, disruption, modification, or destruction of the system.",ap:"RA-3 a"}],stigs:[]},
+
+  {id:"RA-5",title:"Vulnerability Monitoring and Scanning",family:"RA",desc:"Monitor and scan for vulnerabilities at a defined frequency and when new vulnerabilities are identified; employ vulnerability monitoring tools; analyze scan reports; remediate legitimate vulnerabilities within defined response times.",guidance:"Security categorization guides the frequency and comprehensiveness of vulnerability monitoring.",discussion:"Vulnerability monitoring includes scanning for patch levels, functions, ports, protocols, and services not accessible to users or devices.",impact:["low","moderate","high"],related:["CA-2","CA-7","CM-6","CM-8","RA-2","RA-3","SA-11","SI-2","SI-3"],evidence:["Vulnerability scan reports","Patch management records","Remediation tracking logs","Scanning tool configuration"],enhancements:[{id:"RA-5(2)",title:"Update Vulnerabilities to Be Scanned",desc:"Update system vulnerabilities to be scanned prior to a new scan and when new vulnerabilities are identified.",baseline:["moderate","high"]},{id:"RA-5(5)",title:"Privileged Access",desc:"Implement privileged access authorization for selected vulnerability scanning activities.",baseline:["moderate","high"]}],ccis:[{id:"CCI-001643",def:"The organization scans for vulnerabilities in the information system at a defined frequency.",ap:"RA-5 a"},{id:"CCI-001644",def:"The organization employs vulnerability scanning tools that facilitate interoperability.",ap:"RA-5 b"}],stigs:[]},
+
+  {id:"SC-7",title:"Boundary Protection",family:"SC",desc:"Monitor and control communications at external managed interfaces and key internal boundaries; implement subnetworks for publicly accessible components separated from internal networks; connect to external networks only through managed interfaces.",guidance:"Boundary protection mechanisms include routers, gateways, firewalls, guards, and network-based malicious code analysis and virtualization systems.",discussion:"Boundary protection is the managed interface concept for effective control of communications at system boundaries.",impact:["low","moderate","high"],related:["AC-4","AC-17","AC-18","CA-3","CM-2","CM-7","PE-3","SA-8","SC-5","SC-8","SI-3","SI-4"],evidence:["Network topology diagrams","Firewall rule sets","DMZ configuration","Boundary protection device inventory"],enhancements:[{id:"SC-7(3)",title:"Access Points",desc:"Limit the number of external network connections to the system.",baseline:["moderate","high"]},{id:"SC-7(5)",title:"Deny by Default — Allow by Exception",desc:"Deny network communications traffic by default and allow by exception.",baseline:["moderate","high"]},{id:"SC-7(8)",title:"Route Traffic to Authenticated Proxy Servers",desc:"Route internal communications traffic to external networks through authenticated proxy servers.",baseline:["high"]}],ccis:[{id:"CCI-001098",def:"The information system monitors and controls communications at the external boundary of the system.",ap:"SC-7"},{id:"CCI-001100",def:"The information system connects to external networks only through managed interfaces.",ap:"SC-7"}],stigs:[]},
+
+  {id:"SC-8",title:"Transmission Confidentiality and Integrity",family:"SC",desc:"Implement cryptographic mechanisms to prevent unauthorized disclosure of information and detect changes to information during transmission.",guidance:"Protecting the confidentiality and integrity of transmitted information applies to internal and external networks.",discussion:"Cryptographic mechanisms used to protect information integrity include digital signatures and cryptographic hashes.",impact:["moderate","high"],related:["AC-17","IA-3","MA-4","PE-4","SC-12","SC-13","SC-20","SC-23","SI-3"],evidence:["TLS/SSL configuration","Encryption standards documentation","Network traffic inspection results","Certificate inventory"],enhancements:[{id:"SC-8(1)",title:"Cryptographic Protection",desc:"Implement cryptographic mechanisms to prevent unauthorized disclosure and detect changes during transmission.",baseline:["moderate","high"]}],ccis:[{id:"CCI-002418",def:"The information system protects the confidentiality and/or integrity of transmitted information.",ap:"SC-8"},{id:"CCI-002421",def:"The information system implements cryptographic mechanisms to prevent unauthorized disclosure and detect changes during transmission.",ap:"SC-8 1"}],stigs:[]},
+
+  {id:"SI-2",title:"Flaw Remediation",family:"SI",desc:"Identify, report, and correct system flaws; test software and firmware updates for effectiveness and side effects before installation; install security-relevant updates within a defined time period; incorporate flaw remediation into configuration management.",guidance:"Organizations identify systems affected by software flaws and vulnerabilities resulting from those flaws.",discussion:"The organization-defined time period for remediation is consistent with applicable laws and regulations.",impact:["low","moderate","high"],related:["CA-5","CM-3","CM-4","CM-6","CM-8","MA-2","RA-5","SA-10","SA-11","SI-3","SI-7"],evidence:["Patch management policy","Patch scan reports","Remediation tracking records","POA&M for unpatched vulnerabilities"],enhancements:[{id:"SI-2(2)",title:"Automated Flaw Remediation Status",desc:"Determine if system components have applicable security-relevant software updates installed using automated mechanisms.",baseline:["moderate","high"]},{id:"SI-2(3)",title:"Time to Remediate Flaws",desc:"Measure time between flaw identification and remediation; establish benchmarks for corrective actions.",baseline:["high"]}],ccis:[{id:"CCI-002605",def:"The organization identifies, reports, and corrects information system flaws.",ap:"SI-2 a"},{id:"CCI-001167",def:"The organization incorporates flaw remediation into the organizational configuration management process.",ap:"SI-2 d"}],stigs:[]},
+
+  {id:"SI-3",title:"Malicious Code Protection",family:"SI",desc:"Implement malicious code protection mechanisms at system entry and exit points; update mechanisms as new releases are available; configure for periodic and real-time scans; respond to malicious code detection.",guidance:"System entry and exit points include firewalls, remote access servers, workstations, email servers, web servers, proxy servers, and mobile devices.",discussion:"Malicious code protection mechanisms include antivirus signature definitions and reputation-based technologies.",impact:["low","moderate","high"],related:["AC-4","AT-2","CA-7","CM-3","CM-8","IR-4","RA-5","SA-8","SA-10","SI-2","SI-4"],evidence:["AV/EDR tool configuration","Malware scan reports","Signature update logs","Quarantine/remediation records"],enhancements:[{id:"SI-3(1)",title:"Central Management",desc:"Centrally manage malicious code protection mechanisms.",baseline:["moderate","high"]},{id:"SI-3(2)",title:"Automatic Updates",desc:"Automatically update malicious code protection mechanisms.",baseline:["moderate","high"]}],ccis:[{id:"CCI-001243",def:"The information system implements malicious code protection that includes a capability to update malicious code protection mechanisms.",ap:"SI-3 b"},{id:"CCI-001244",def:"The information system performs real-time scans of files from external sources.",ap:"SI-3 c"}],stigs:[]},
+
+  {id:"SI-4",title:"System Monitoring",family:"SI",desc:"Monitor the system to detect attacks and indicators of potential attacks; identify unauthorized use; invoke internal monitoring capabilities or deploy monitoring devices; monitor inbound and outbound communications; identify unauthorized use through defined techniques.",guidance:"System monitoring includes external and internal monitoring.",discussion:"System monitoring is an important component of continuous monitoring programs.",impact:["low","moderate","high"],related:["AC-2","AC-3","AC-6","AU-2","AU-3","AU-6","CA-7","CM-8","IR-4","MA-4","PE-3","PE-6","RA-5","SC-7","SI-3"],evidence:["IDS/IPS configuration","SIEM tool configuration","Network monitoring reports","Anomaly detection alerts"],enhancements:[{id:"SI-4(2)",title:"Automated Tools for Real-Time Analysis",desc:"Employ automated tools to support near real-time analysis of events.",baseline:["moderate","high"]},{id:"SI-4(4)",title:"Inbound and Outbound Communications Traffic",desc:"Determine and document circumstances under which communications traffic is to be captured for analysis.",baseline:["moderate","high"]},{id:"SI-4(5)",title:"System-Generated Alerts",desc:"Alert defined personnel when defined compromise indicators occur.",baseline:["moderate","high"]}],ccis:[{id:"CCI-002661",def:"The organization monitors the information system to detect attacks and indicators of potential attacks.",ap:"SI-4 a"},{id:"CCI-001263",def:"The information system monitors inbound and outbound communications traffic for unusual or unauthorized activities.",ap:"SI-4 e"}],stigs:[]},
+];
+
+// ════════════════════════════════════════════════════════════════════════════
+// OVERLAY DEFINITIONS
+// ════════════════════════════════════════════════════════════════════════════
+const OVERLAYS = {
+  none: { name:"NIST 800-53 Rev 5 Baseline", desc:"Standard baselines with no additional requirements.", addl:[] },
+  fedramp: { name:"FedRAMP Moderate Overlay", desc:"Adds FedRAMP-specific parameter requirements. Controls are supplemented with FedRAMP-defined parameters for organization-defined values. Adds AC-2(12), AC-17(1), AC-17(2), AC-17(3), AC-17(4), AU-3(1), CA-7(1), SI-4(1) as required.", addl:["AC-2(12)","AC-17(1)","AC-17(2)","AU-3(1)","CA-7(1)","SI-4(1)","SI-4(2)","RA-5(2)","SC-7(3)","SC-7(5)","SC-8(1)"] },
+  dod: { name:"DoD IL2 Cloud Computing SRG Overlay", desc:"DoD Impact Level 2 adds requirements beyond FedRAMP Moderate. Emphasizes multi-factor authentication, FIPS 140-2 validation, and enhanced logging.", addl:["AC-2(4)","AC-3(7)","AC-6(9)","AU-3(2)","AU-6(3)","IA-2(1)","IA-2(2)","IA-2(12)","SC-7(8)","SI-3(1)"] },
+  privacy: { name:"Privacy Overlay (PT Family)", desc:"Activates PII processing, data transparency, and privacy controls. Requires a Privacy Program Plan, privacy impact assessments, and breach notification procedures.", addl:["PT-1","PT-2","PT-3","PT-4","PT-5","AT-2(5)","AC-3(7)","IA-5(6)","SI-12","AR-1","AR-2"] },
+  classified: { name:"Classified National Security Systems Overlay", desc:"HIGH baseline with CNSS 1253 additions. Requires enhanced access enforcement, multi-person authorization for critical functions, and TEMPEST controls for applicable systems.", addl:["AC-3(2)","AC-5","AC-6","IA-2(1)","IA-2(2)","MA-4(6)","PE-4","SC-28","SI-7"] },
+  scif: { name:"SCIF / ICD 705 Physical Security Overlay", desc:"Adds physical construction, inspection, and access control requirements for Sensitive Compartmented Information Facilities per ICD 705 and ICPG 705.1.", addl:["PE-2","PE-3","PE-6","PE-13","PE-14","PE-17","PE-19"] },
+};
+
+// ════════════════════════════════════════════════════════════════════════════
+// ════════════════════════════════════════════════════════════════════════════
+// LOCALSTORAGE PERSISTENCE
+// ════════════════════════════════════════════════════════════════════════════
+const LS_KEY = 'rmf_controlmgr_v3';
+
+function lsSave(){
+  try {
+    const payload = {
+      status:    state.status,
+      inherit:   state.inherit,
+      owner:     state.owner,
+      comments:  state.comments,
+      evidence:  state.evidence,
+      history:   state.history,
+      ctrlStigs: state.ctrlStigs,
+      poams:     state.poams,
+      users:     state.users,
+      currentUser: state.currentUser,
+      activeOverlay: state.activeOverlay,
+      savedAt:   new Date().toISOString(),
+    };
+    localStorage.setItem(LS_KEY, JSON.stringify(payload));
+    // Update save indicator
+    const ind = document.getElementById('saveIndicator');
+    const ts  = document.getElementById('saveTime');
+    if(ind){ ind.textContent='● Saved locally'; ind.style.color='var(--green)'; }
+    if(ts){  ts.textContent = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
+  } catch(e) {
+    const ind = document.getElementById('saveIndicator');
+    if(ind){ ind.textContent='⚠ Save failed'; ind.style.color='var(--red)'; }
+    console.warn('localStorage save failed:', e);
+  }
+}
+
+function lsLoad(){
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return null;
+    return JSON.parse(raw);
+  } catch(e) {
+    console.warn('localStorage load failed:', e);
+    return null;
+  }
+}
+
+function lsClear(){
+  if(!confirm('This will permanently delete ALL saved data on this machine including all control statuses, POA&Ms, notes, evidence, and team members. This cannot be undone.\n\nAre you sure?')) return;
+  localStorage.removeItem(LS_KEY);
+  location.reload();
+}
+
+// Export full data backup as JSON file
+function exportBackup(){
+  const raw = localStorage.getItem(LS_KEY);
+  if(!raw){ toast('No saved data to export'); return; }
+  const data = JSON.parse(raw);
+  data.exportedAt = new Date().toISOString();
+  data.version = 'rmf-v3';
+  const blob = new Blob([JSON.stringify(data, null, 2)], {type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `rmf-backup-${new Date().toISOString().substring(0,10)}.json`;
+  a.click();
+  toast('Backup downloaded');
+}
+
+// Import backup JSON file
+function importBackup(){
+  const inp = document.createElement('input');
+  inp.type='file'; inp.accept='.json';
+  inp.onchange = e => {
+    const file = e.target.files[0];
+    if(!file) return;
+    const reader = new FileReader();
+    reader.onload = ev => {
+      try {
+        const data = JSON.parse(ev.target.result);
+        if(!data.version || !data.version.startsWith('rmf')){ toast('Invalid backup file'); return; }
+        if(!confirm(`Import backup from ${data.exportedAt?.substring(0,10)||'unknown date'}?\n\nThis will overwrite your current data.`)) return;
+        localStorage.setItem(LS_KEY, JSON.stringify(data));
+        location.reload();
+      } catch(err){
+        toast('Failed to parse backup file');
+      }
+    };
+    reader.readAsText(file);
+  };
+  inp.click();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// STATE
+// ════════════════════════════════════════════════════════════════════════════
+const _saved = lsLoad();
+
+const state = {
+  family: 'all',
+  currentCtrl: null,
+  currentCtrlIdx: -1,
+  filteredCtrls: [],
+  bulkMode: false,
+  selectedIds: new Set(),
+  poams:         _saved?.poams      || [],
+  users:         _saved?.users      || [],
+  currentUser:   _saved?.currentUser|| 'ISSO',
+  activeOverlay: _saved?.activeOverlay || 'none',
+  editingPoamIdx: -1,
+  // Per-control data — restored from localStorage or empty
+  status:    _saved?.status    || {},
+  inherit:   _saved?.inherit   || {},
+  owner:     _saved?.owner     || {},
+  comments:  _saved?.comments  || {},
+  evidence:  _saved?.evidence  || {},
+  history:   _saved?.history   || {},
+  ctrlStigs: _saved?.ctrlStigs || {},
+};
+
+const STATUS_LABELS = {none:'Untracked',notstart:'Not Started',inprog:'In Progress',impl:'Implemented',na:'N/A'};
+const INH_LABELS = {sys:'System-Specific',hyb:'Hybrid',inh:'Inherited','':''};
+
+function gs(id){ return state.status[id]||'none'; }
+function gi(id){ return state.inherit[id]||''; }
+function go(id){ return state.owner[id]||''; }
+
+function logHistory(id, action){
+  if(!state.history[id]) state.history[id]=[];
+  state.history[id].unshift({user:state.currentUser, ts:new Date().toISOString(), action});
+  lsSave();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════════════════════
+function init(){
+  // Nav family list
+  const fn = document.getElementById('famNav');
+  fn.innerHTML = `<button class="fam-btn active" onclick="setFamily('all',this)"><span class="fam-code">ALL</span><span>All Families</span><span class="fam-cnt">${CONTROLS.length}</span></button>`;
+  FAMILIES.forEach(f=>{
+    const cnt = CONTROLS.filter(c=>c.family===f.code).length;
+    fn.innerHTML += `<button class="fam-btn" onclick="setFamily('${f.code}',this)"><span class="fam-code">${f.code}</span><span style="flex:1;overflow:hidden;text-overflow:ellipsis">${f.name}</span><span class="fam-cnt">${cnt}</span></button>`;
+  });
+
+  // Populate POAM control dropdown
+  const pc = document.getElementById('pf-ctrl');
+  CONTROLS.forEach(c=>{ pc.innerHTML += `<option value="${c.id}">${c.id} — ${c.title}</option>`; });
+
+  document.getElementById('navCtrlCount').textContent = CONTROLS.length;
+
+  // Add keyboard listener for AI
+  document.getElementById('ai-q').addEventListener('keydown',e=>{ if(e.key==='Enter') askAI(); });
+
+  // AI input in modal comment
+  document.getElementById('m-comment-input').addEventListener('keydown',e=>{ if(e.key==='Enter') addComment(); });
+
+  // Restore overlay UI if one was saved
+  if(state.activeOverlay && state.activeOverlay !== 'none'){
+    const el = document.getElementById('ov-'+state.activeOverlay);
+    if(el) setOverlay(state.activeOverlay, el);
+  } else {
+    document.getElementById('ov-none')?.classList.add('active');
+  }
+
+  // Show last saved time on load
+  if(_saved?.savedAt){
+    const ts = document.getElementById('saveTime');
+    if(ts) ts.textContent = 'Last: '+new Date(_saved.savedAt).toLocaleDateString();
+  }
+
+  // Storage usage estimate
+  try {
+    const bytes = new Blob([localStorage.getItem(LS_KEY)||'']).size;
+    const kb = (bytes/1024).toFixed(1);
+    const storageInfo = document.getElementById('storageInfo');
+    if(storageInfo) storageInfo.textContent = `Local storage: ${kb} KB used`;
+  } catch(e){}
+
+  renderAll();
+  updateTopbar();
+}
+
+function renderAll(){
+  renderControls();
+  renderDashboard();
+  renderPoam();
+  renderUsers();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// NAVIGATION
+// ════════════════════════════════════════════════════════════════════════════
+function showPage(name, btn){
+  document.querySelectorAll('.page').forEach(p=>p.classList.remove('active'));
+  document.getElementById('page-'+name).classList.add('active');
+  document.querySelectorAll('.nav-item').forEach(b=>b.classList.remove('active'));
+  if(btn) btn.classList.add('active');
+  const titles={dashboard:'Dashboard',controls:'Controls',poam:'POA&M Tracker',overlays:'Overlays',users:'Team Management'};
+  const subs={dashboard:'ATO Readiness Overview',controls:'Browse & Track NIST 800-53 Rev 5 Controls',poam:'Track Weaknesses & Remediation',overlays:'Compliance Profile Management',users:'Control Ownership & Assignment'};
+  document.getElementById('topbarTitle').textContent = titles[name]||name;
+  document.getElementById('topbarSub').textContent = subs[name]||'';
+  if(name==='controls') setTimeout(()=>document.getElementById('searchInput').focus(),100);
+}
+
+function setFamily(code, btn){
+  state.family = code;
+  document.querySelectorAll('.fam-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  showPage('controls', document.querySelector('.nav-item:nth-child(2)'));
+  renderControls();
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// CONTROLS PAGE
+// ════════════════════════════════════════════════════════════════════════════
+function renderControls(){
+  const q = (document.getElementById('searchInput')?.value||'').toLowerCase();
+  const imp = document.getElementById('impactFilter')?.value||'';
+  const sts = document.getElementById('statusFilter')?.value||'';
+  const inh = document.getElementById('inhFilter')?.value||'';
+
+  let filtered = CONTROLS;
+  if(state.family !== 'all') filtered = filtered.filter(c=>c.family===state.family);
+  if(imp) filtered = filtered.filter(c=>c.impact.includes(imp));
+  if(sts) filtered = filtered.filter(c=>gs(c.id)===sts);
+  if(inh) filtered = filtered.filter(c=>gi(c.id)===inh);
+  if(q) filtered = filtered.filter(c=>
+    c.id.toLowerCase().includes(q)||c.title.toLowerCase().includes(q)||
+    c.desc.toLowerCase().includes(q)||c.ccis.some(x=>x.id.toLowerCase().includes(q)||x.def.toLowerCase().includes(q))
+  );
+
+  state.filteredCtrls = filtered;
+  document.getElementById('ctrlResultInfo').textContent = `${filtered.length} of ${CONTROLS.length} controls`;
+
+  const grid = document.getElementById('ctrlGrid');
+  const empty = document.getElementById('ctrlEmpty');
+
+  if(!filtered.length){ grid.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  grid.innerHTML = filtered.map((c,i)=>{
+    const s = gs(c.id);
+    const ih = gi(c.id);
+    const ow = go(c.id);
+    const sel = state.selectedIds.has(c.id);
+    return `<div class="ctrl-card cc-s-${s} ${sel?'sel-active':''}" onclick="handleCardClick(event,'${c.id}')">
+      <div class="ctrl-card-head">
+        ${state.bulkMode?`<input type="checkbox" ${sel?'checked':''} onclick="event.stopPropagation();toggleSelect('${c.id}')" style="margin-top:2px;">`:``}
+        <div class="ctrl-id">${c.id}</div>
+        <div class="ctrl-title">${c.title}</div>
+        <span class="sbadge s-${s}">${STATUS_LABELS[s]}</span>
+      </div>
+      <div class="ctrl-desc">${c.desc}</div>
+      <div class="ctrl-foot">
+        ${c.impact.map(i=>`<span class="itag t-${i==='moderate'?'mod':i}">${i.toUpperCase()}</span>`).join('')}
+        ${ih?`<span class="ibadge i-${ih}">${INH_LABELS[ih]}</span>`:''}
+        ${c.enhancements.length?`<span class="meta-chip">+${c.enhancements.length} ENH</span>`:''}
+        ${c.ccis.length?`<span class="meta-chip" style="color:var(--yellow)">${c.ccis.length} CCI</span>`:''}
+        ${ow?`<span class="meta-chip" style="color:var(--teal);margin-left:auto;">👤 ${ow}</span>`:''}
+      </div>
+    </div>`;
+  }).join('');
+
+  updateBulkBar();
+}
+
+function handleCardClick(e, id){
+  if(state.bulkMode){ toggleSelect(id); return; }
+  const idx = state.filteredCtrls.findIndex(c=>c.id===id);
+  openCtrlModal(id, idx);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// BULK SELECT
+// ════════════════════════════════════════════════════════════════════════════
+function toggleBulkMode(){
+  state.bulkMode = !state.bulkMode;
+  state.selectedIds.clear();
+  document.getElementById('bulkModeBtn').textContent = state.bulkMode ? '✕ Cancel Select' : '☐ Select';
+  updateBulkBar();
+  renderControls();
+}
+
+function toggleSelect(id){
+  if(state.selectedIds.has(id)) state.selectedIds.delete(id);
+  else state.selectedIds.add(id);
+  updateBulkBar();
+  renderControls();
+}
+
+function clearSelection(){ state.selectedIds.clear(); updateBulkBar(); renderControls(); }
+
+function updateBulkBar(){
+  const bar = document.getElementById('bulkBar');
+  const cnt = state.selectedIds.size;
+  if(state.bulkMode && cnt>0){ bar.classList.add('show'); document.getElementById('bulkCount').textContent=`${cnt} selected`; }
+  else bar.classList.remove('show');
+  // Populate owner select
+  const bos = document.getElementById('bulkOwnerSel');
+  bos.innerHTML='<option value="">Assign Owner…</option>';
+  state.users.forEach(u=>bos.innerHTML+=`<option value="${u.name}">${u.name}</option>`);
+}
+
+function applyBulk(){
+  const sts = document.getElementById('bulkStatusSel').value;
+  const inh = document.getElementById('bulkInhSel').value;
+  const own = document.getElementById('bulkOwnerSel').value;
+  state.selectedIds.forEach(id=>{
+    if(sts){ state.status[id]=sts; logHistory(id,`Status set to ${STATUS_LABELS[sts]} (bulk)`); }
+    if(inh){ state.inherit[id]=inh; logHistory(id,`Inheritance set to ${INH_LABELS[inh]} (bulk)`); }
+    if(own){ state.owner[id]=own; logHistory(id,`Owner assigned to ${own} (bulk)`); }
+  });
+  lsSave();
+  state.selectedIds.clear();
+  document.getElementById('bulkStatusSel').value='';
+  document.getElementById('bulkInhSel').value='';
+  document.getElementById('bulkOwnerSel').value='';
+  toggleBulkMode();
+  renderAll();
+  toast(`Applied changes to selected controls`);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// CONTROL MODAL
+// ════════════════════════════════════════════════════════════════════════════
+function openCtrlModal(id, idx){
+  const c = CONTROLS.find(x=>x.id===id);
+  if(!c) return;
+  state.currentCtrl = c;
+  state.currentCtrlIdx = idx !== undefined ? idx : state.filteredCtrls.findIndex(x=>x.id===id);
+
+  setText('m-id',     c.id);
+  setText('m-title',  c.title);
+  setText('m-family', c.family + ' — ' + (FAMILIES.find(f=>f.code===c.family)?.name||''));
+  setHTML('m-desc',   c.desc);
+  setHTML('m-guid',   c.guidance);
+  setHTML('m-disc',   c.discussion);
+  document.getElementById('m-impact').innerHTML = c.impact.map(i=>`<span class="itag t-${i==='moderate'?'mod':i}" style="font-size:11px;padding:3px 8px;">${i.toUpperCase()} BASELINE</span>`).join('');
+  document.getElementById('m-related').innerHTML = c.related.map(r=>`<span class="rel-chip" onclick="openCtrlModal('${r}')" title="${CONTROLS.find(x=>x.id===r)?.title||r}">${r}</span>`).join('');
+
+  // Enhancements
+  document.getElementById('enhCnt').textContent = c.enhancements.length?`(${c.enhancements.length})`:'';
+  document.getElementById('m-enhancements').innerHTML = c.enhancements.length
+    ? c.enhancements.map(e=>`<div class="enh-item"><div class="enh-head"><div class="enh-id">${e.id}</div><div class="enh-title">${e.title}</div></div><div class="msec-text" style="font-size:11px;">${e.desc}</div><div style="margin-top:6px;display:flex;gap:4px;">${e.baseline.map(b=>`<span class="itag t-${b==='moderate'?'mod':b}">${b.toUpperCase()}</span>`).join('')}</div></div>`).join('')
+    : '<div style="color:var(--text3);font-family:var(--mono);font-size:10px;padding:20px;text-align:center;">No control enhancements for this control.</div>';
+
+  // CCIs
+  document.getElementById('cciCnt').textContent = c.ccis.length?`(${c.ccis.length})`:'';
+  document.getElementById('m-ccis').innerHTML = c.ccis.map(x=>`<div class="cci-item"><div><div class="cci-id">${x.id}</div><div class="cci-ap">AP: ${x.ap}</div></div><div class="cci-def">${x.def}</div></div>`).join('');
+
+  // STIG
+  refreshStigTab();
+
+  // CVE
+  const cves = CVE_MAP[c.family]||[];
+  document.getElementById('m-cves').innerHTML = cves.length
+    ? cves.map(v=>`<div class="cve-item"><div class="cve-head"><div class="cve-id">${v.id}</div><span class="rbadge r-${v.sev==='CRITICAL'?'cat1':v.sev==='HIGH'?'cat2':'cat3'}">${v.sev} ${v.score}</span></div><div class="cve-desc">${v.desc}</div></div>`).join('')
+    : '<div style="color:var(--text3);font-family:var(--mono);font-size:10px;padding:16px;text-align:center;">No mapped CVEs for this control family. Note: CVE integration requires network access — check NVD for live data.</div>';
+
+  // Tracking
+  refreshTrackingTab();
+
+  // Evidence
+  refreshEvidenceTab();
+
+  // History
+  refreshHistoryTab();
+
+  // AI chips
+  document.getElementById('ai-chips').innerHTML = ['How do I implement this?','Common audit findings','What evidence satisfies this?','STIG correlation for this control','FedRAMP requirements','POA&M guidance'].map(q=>`<div class="ai-chip" onclick="setAiChip(this,'${q}')">${q}</div>`).join('');
+
+  document.getElementById('ai-q').value='';
+  document.getElementById('ai-resp').classList.remove('show');
+  document.getElementById('ai-thinking').classList.remove('show');
+
+  switchCtrlTab('overview');
+  document.getElementById('ctrlOverlay').classList.add('open');
+}
+
+function refreshStigTab(){
+  const c = state.currentCtrl;
+  const stigs = state.ctrlStigs[c.id]||[];
+  document.getElementById('stigCnt').textContent = stigs.length?`(${stigs.length})`:'';
+  document.getElementById('m-stigs').innerHTML = stigs.length
+    ? stigs.map((s,i)=>`<div class="stig-item"><div class="stig-head"><div class="stig-id">${s.id}</div><span class="rbadge r-${s.cat}">${s.cat.toUpperCase()}</span><div class="stig-title">${s.title}</div><button onclick="deleteStig('${c.id}',${i})" class="evid-del" style="margin-left:auto;">✕</button></div><div class="stig-text">${s.details||''}</div></div>`).join('')
+    : '<div style="color:var(--text3);font-family:var(--mono);font-size:10px;padding:20px;text-align:center;">No STIG findings logged for this control. Click "+ Log STIG Finding" to add one.</div>';
+}
+
+function refreshTrackingTab(){
+  const c = state.currentCtrl;
+  const s = gs(c.id);
+  const ih = gi(c.id);
+  const ow = go(c.id);
+
+  // Status buttons
+  document.getElementById('m-sts-row').innerHTML = ['notstart','inprog','impl','na'].map(k=>`<button class="sts-btn ${s===k?'a-'+k:''}" onclick="setStatus('${k}')">${STATUS_LABELS[k]}</button>`).join('');
+
+  // Inheritance buttons
+  document.getElementById('m-inh-row').innerHTML = ['sys','hyb','inh'].map(k=>`<button class="inh-btn ${ih===k?'a-'+k:''}" onclick="setInheritance('${k}')">${INH_LABELS[k]}</button>`).join('');
+
+  // Owner select
+  const sel = document.getElementById('m-owner-sel');
+  sel.innerHTML='<option value="">Unassigned</option>';
+  state.users.forEach(u=>sel.innerHTML+=`<option value="${u.name}" ${ow===u.name?'selected':''}>${u.name} (${u.role})</option>`);
+
+  // Comments
+  const cmts = state.comments[c.id]||[];
+  document.getElementById('m-comments').innerHTML = cmts.length
+    ? cmts.map(cm=>`<div class="comment-item"><div class="comment-meta"><span class="comment-author">${cm.user}</span><span>${fmtTs(cm.ts)}</span></div><div class="comment-text">${cm.text}</div></div>`).join('')
+    : '<div style="color:var(--text3);font-family:var(--mono);font-size:10px;padding:10px;">No notes yet.</div>';
+}
+
+function refreshEvidenceTab(){
+  const c = state.currentCtrl;
+  const ev = state.evidence[c.id]||[];
+  document.getElementById('m-evidence').innerHTML = ev.length
+    ? ev.map((e,i)=>`<div class="evid-item"><div class="evid-icon">📎</div><div style="flex:1;"><div class="evid-name">${e.url?`<a href="${e.url}" target="_blank" class="evid-link">${e.name}</a>`:e.name}</div><div class="evid-date">${fmtTs(e.ts)}</div></div><button class="evid-del" onclick="deleteEvidence('${c.id}',${i})">✕</button></div>`).join('')
+    : '<div style="color:var(--text3);font-family:var(--mono);font-size:10px;padding:10px;">No evidence attached.</div>';
+  document.getElementById('m-evid-suggest').innerHTML = c.evidence.map(e=>`<div>◆ ${e}</div>`).join('');
+}
+
+function refreshHistoryTab(){
+  const c = state.currentCtrl;
+  const h = state.history[c.id]||[];
+  document.getElementById('m-history').innerHTML = h.length
+    ? h.map(x=>`<div class="comment-item"><div class="comment-meta"><span class="comment-author">${x.user}</span><span>${fmtTs(x.ts)}</span></div><div class="comment-text">${x.action}</div></div>`).join('')
+    : '<div style="color:var(--text3);font-family:var(--mono);font-size:10px;padding:10px;">No history yet.</div>';
+}
+
+function fmtTs(ts){ const d=new Date(ts); return d.toLocaleDateString()+' '+d.toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'}); }
+
+function setStatus(s){
+  const c = state.currentCtrl;
+  state.status[c.id]=s;
+  logHistory(c.id, `Status changed to: ${STATUS_LABELS[s]}`);
+  lsSave();
+  refreshTrackingTab();
+  updateTopbar();
+  renderDashboard();
+  renderControls();
+}
+
+function setInheritance(k){
+  const c = state.currentCtrl;
+  state.inherit[c.id]=k;
+  logHistory(c.id, `Inheritance type set to: ${INH_LABELS[k]}`);
+  lsSave();
+  refreshTrackingTab();
+  refreshHistoryTab();
+  renderControls();
+}
+
+function saveOwner(){
+  const c = state.currentCtrl;
+  const v = document.getElementById('m-owner-sel').value;
+  state.owner[c.id]=v;
+  logHistory(c.id, `Owner assigned to: ${v||'Unassigned'}`);
+  lsSave();
+  refreshHistoryTab();
+  renderControls();
+}
+
+function addComment(){
+  const inp = document.getElementById('m-comment-input');
+  const txt = inp.value.trim();
+  if(!txt) return;
+  const c = state.currentCtrl;
+  if(!state.comments[c.id]) state.comments[c.id]=[];
+  state.comments[c.id].unshift({user:state.currentUser, ts:new Date().toISOString(), text:txt});
+  logHistory(c.id, `Comment added: "${txt.substring(0,50)}${txt.length>50?'…':''}"`);
+  lsSave();
+  inp.value='';
+  refreshTrackingTab();
+  refreshHistoryTab();
+}
+
+function addEvidence(){
+  const name = document.getElementById('evid-name').value.trim();
+  if(!name) return;
+  const url = document.getElementById('evid-url').value.trim();
+  const c = state.currentCtrl;
+  if(!state.evidence[c.id]) state.evidence[c.id]=[];
+  state.evidence[c.id].unshift({name, url, ts:new Date().toISOString()});
+  logHistory(c.id, `Evidence attached: "${name}"`);
+  lsSave();
+  document.getElementById('evid-name').value='';
+  document.getElementById('evid-url').value='';
+  refreshEvidenceTab();
+  refreshHistoryTab();
+  toast('Evidence attached');
+}
+
+function deleteEvidence(id, idx){
+  state.evidence[id].splice(idx,1);
+  lsSave();
+  refreshEvidenceTab();
+  toast('Evidence removed');
+}
+
+function deleteStig(id, idx){
+  state.ctrlStigs[id].splice(idx,1);
+  lsSave();
+  refreshStigTab();
+  toast('STIG finding removed');
+}
+
+function switchCtrlTab(name){
+  document.querySelectorAll('#ctrlTabs .tab').forEach((t,i)=>{
+    const names=['overview','enhancements','cci','stig','cve','tracking','evidence','history','ai'];
+    t.classList.toggle('active',names[i]===name);
+  });
+  document.querySelectorAll('.tab-panel').forEach(p=>p.classList.toggle('active',p.id==='tp-'+name));
+}
+
+function closeCtrlModal(){ document.getElementById('ctrlOverlay').classList.remove('open'); }
+function handleCtrlOverlay(e){ if(e.target===document.getElementById('ctrlOverlay')) closeCtrlModal(); }
+
+// ════════════════════════════════════════════════════════════════════════════
+// DASHBOARD
+// ════════════════════════════════════════════════════════════════════════════
+function renderDashboard(){
+  const total = CONTROLS.length;
+  const totalEnh = CONTROLS.reduce((a,c)=>a+c.enhancements.length,0);
+  const counts = {none:0,notstart:0,inprog:0,impl:0,na:0};
+  CONTROLS.forEach(c=>counts[gs(c.id)]++);
+  const implPct = Math.round(counts.impl/total*100);
+  const openPoams = state.poams.filter(p=>p.status==='open').length;
+  const highPoams = state.poams.filter(p=>p.risk==='high'&&p.status==='open').length;
+
+  setText('d-total',     total);
+  setText('d-total-enh', `${totalEnh} enhancements`);
+  setText('d-impl',      counts.impl);
+  setText('d-impl-pct',  implPct+'%');
+  setText('d-open-poam', openPoams);
+  setText('d-high-poam', `${highPoams} high risk`);
+
+  // ATO score
+  const ato = counts.impl+counts.na > 0 ? Math.round((counts.impl+counts.na)/total*100) : 0;
+  const atoEl = $id('d-ato-score');
+  if(atoEl){ atoEl.textContent = ato+'%'; atoEl.style.color = ato>=80?'var(--green)':ato>=50?'var(--yellow)':'var(--red)'; }
+
+  // Progress bars
+  setStyle('pb-impl','width',(counts.impl/total*100)+'%');
+  setStyle('pb-prog','width',(counts.inprog/total*100)+'%');
+  setStyle('pb-ns',  'width',(counts.notstart/total*100)+'%');
+  setStyle('pb-na',  'width',(counts.na/total*100)+'%');
+  setText('pb-impl-n', counts.impl);
+  setText('pb-prog-n', counts.inprog);
+  setText('pb-ns-n',   counts.notstart);
+  setText('pb-na-n',   counts.na);
+
+  // Family grid
+  const fg = document.getElementById('familyAtoGrid');
+  fg.innerHTML = FAMILIES.map(f=>{
+    const fCtrls = CONTROLS.filter(c=>c.family===f.code);
+    if(!fCtrls.length) return '';
+    const fi={none:0,notstart:0,inprog:0,impl:0,na:0};
+    fCtrls.forEach(c=>fi[gs(c.id)]++);
+    const score = fCtrls.length?Math.round((fi.impl+fi.na)/fCtrls.length*100):0;
+    const color = score>=80?'var(--green)':score>=50?'var(--yellow)':score>0?'var(--orange)':'var(--red)';
+    const bar = fCtrls.length;
+    return `<div class="fam-ato-card">
+      <div class="fam-ato-head">
+        <div class="fam-ato-code">${f.code}</div>
+        <div class="fam-ato-name">${f.name}</div>
+        <div class="fam-ato-score" style="color:${color}">${score}%</div>
+      </div>
+      <div class="fam-ato-bar">
+        <div class="pbar-track"><div class="pbar-seg" style="background:var(--green);width:${fi.impl/bar*100}%"></div><div class="pbar-seg" style="background:var(--yellow);width:${fi.inprog/bar*100}%"></div><div class="pbar-seg" style="background:var(--red);width:${fi.notstart/bar*100}%"></div><div class="pbar-seg" style="background:var(--purple);width:${fi.na/bar*100}%"></div></div>
+      </div>
+      <div class="fam-ato-counts">
+        <span class="fac"><span style="color:var(--green)">${fi.impl}</span> impl</span>
+        <span class="fac"><span style="color:var(--yellow)">${fi.inprog}</span> prog</span>
+        <span class="fac"><span style="color:var(--red)">${fi.notstart}</span> not started</span>
+        <span class="fac"><span style="color:var(--text2)">${fCtrls.length}</span> total</span>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateTopbar(){
+  const total = CONTROLS.length;
+  const impl = CONTROLS.filter(c=>gs(c.id)==='impl').length;
+  const pct = Math.round(impl/total*100);
+  document.getElementById('tbImpl').textContent=pct+'%';
+  document.getElementById('tbPoam').textContent=state.poams.filter(p=>p.status==='open').length;
+  document.getElementById('tbUsers').textContent=state.users.length;
+  document.getElementById('navCtrlCount').textContent=CONTROLS.length;
+  document.getElementById('navPoamCount').textContent=state.poams.filter(p=>p.status==='open').length;
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// POAM
+// ════════════════════════════════════════════════════════════════════════════
+function openPoamModal(idx){
+  state.editingPoamIdx = idx !== undefined ? idx : -1;
+  document.getElementById('poamModalTitle').textContent = idx !== undefined ? 'Edit POA&M Finding' : 'Add POA&M Finding';
+  if(idx !== undefined){
+    const p = state.poams[idx];
+    document.getElementById('pf-ctrl').value=p.ctrl;
+    document.getElementById('pf-desc').value=p.desc;
+    document.getElementById('pf-risk').value=p.risk;
+    document.getElementById('pf-status').value=p.status;
+    document.getElementById('pf-party').value=p.party;
+    document.getElementById('pf-date').value=p.date;
+    document.getElementById('pf-plan').value=p.plan||'';
+  } else {
+    document.getElementById('pf-ctrl').value='';
+    document.getElementById('pf-desc').value='';
+    document.getElementById('pf-risk').value='moderate';
+    document.getElementById('pf-status').value='open';
+    document.getElementById('pf-party').value='';
+    document.getElementById('pf-date').value='';
+    document.getElementById('pf-plan').value='';
+  }
+  document.getElementById('poamOverlay').classList.add('open');
+}
+
+function closePoamModal(){ document.getElementById('poamOverlay').classList.remove('open'); }
+
+function savePoam(){
+  const p = {
+    id: state.editingPoamIdx>=0 ? state.poams[state.editingPoamIdx].id : `POAM-${String(state.poams.length+1).padStart(4,'0')}`,
+    ctrl: document.getElementById('pf-ctrl').value,
+    desc: document.getElementById('pf-desc').value,
+    risk: document.getElementById('pf-risk').value,
+    status: document.getElementById('pf-status').value,
+    party: document.getElementById('pf-party').value,
+    date: document.getElementById('pf-date').value,
+    plan: document.getElementById('pf-plan').value,
+    created: state.editingPoamIdx>=0 ? state.poams[state.editingPoamIdx].created : new Date().toISOString(),
+  };
+  if(!p.desc){ toast('Please enter a finding description'); return; }
+  if(state.editingPoamIdx>=0) state.poams[state.editingPoamIdx]=p;
+  else state.poams.push(p);
+  lsSave();
+  closePoamModal();
+  renderPoam();
+  updateTopbar();
+  renderDashboard();
+  toast(state.editingPoamIdx>=0 ? 'POA&M updated' : 'POA&M finding added');
+}
+
+function deletePoam(idx){
+  if(!confirm('Delete this POA&M entry?')) return;
+  state.poams.splice(idx,1);
+  lsSave();
+  renderPoam();
+  updateTopbar();
+  renderDashboard();
+  toast('POA&M entry deleted');
+}
+
+function renderPoam(){
+  const q=(document.getElementById('poamSearch')?.value||'').toLowerCase();
+  const risk=document.getElementById('poamRiskFilter')?.value||'';
+  const sts=document.getElementById('poamStatusFilter')?.value||'';
+
+  let filtered = state.poams;
+  if(q) filtered=filtered.filter(p=>p.id.toLowerCase().includes(q)||p.desc.toLowerCase().includes(q)||p.ctrl.toLowerCase().includes(q)||p.party.toLowerCase().includes(q));
+  if(risk) filtered=filtered.filter(p=>p.risk===risk);
+  if(sts) filtered=filtered.filter(p=>p.status===sts);
+
+  const tbody = document.getElementById('poamBody');
+  const empty = document.getElementById('poamEmpty');
+
+  if(!filtered.length){ tbody.innerHTML=''; empty.style.display='block'; return; }
+  empty.style.display='none';
+
+  tbody.innerHTML = filtered.map((p,i)=>{
+    const rClass = {high:'r-high',moderate:'r-mod',low:'r-low'}[p.risk]||'';
+    const sClass = {open:'s-notstart',closed:'s-impl',delayed:'s-inprog'}[p.status]||'';
+    const isOverdue = p.date && new Date(p.date)<new Date() && p.status==='open';
+    return `<tr>
+      <td><span style="font-family:var(--mono);font-size:10px;color:var(--accentL);">${p.id}</span></td>
+      <td><span style="font-family:var(--mono);font-size:10px;color:var(--text2);">${p.ctrl||'—'}</span></td>
+      <td style="max-width:280px;"><div style="color:var(--text);font-size:12px;">${p.desc}</div>${p.plan?`<div style="font-size:10px;color:var(--text3);margin-top:3px;">Plan: ${p.plan}</div>`:''}</td>
+      <td><span class="rbadge ${rClass}">${p.risk?.toUpperCase()}</span></td>
+      <td><span class="sbadge ${sClass}">${p.status?.charAt(0).toUpperCase()+p.status?.slice(1)}</span></td>
+      <td style="font-size:11px;">${p.party||'—'}</td>
+      <td><span style="font-family:var(--mono);font-size:10px;color:${isOverdue?'var(--red)':'var(--text2)'};">${p.date||'—'}${isOverdue?' ⚠':''}${isOverdue?'<br><span style="font-size:9px;color:var(--red);">OVERDUE</span>':''}</span></td>
+      <td><div style="display:flex;gap:6px;"><button class="btn btn-sm" onclick="openPoamModal(${state.poams.indexOf(p)})">Edit</button><button class="btn btn-sm btn-red" onclick="deletePoam(${state.poams.indexOf(p)})">Del</button></div></td>
+    </tr>`;
+  }).join('');
+}
+
+function exportPoamCSV(){
+  const rows=[['POA&M ID','Control','Finding','Risk','Status','Responsible Party','Scheduled Completion','Remediation Plan','Created']];
+  state.poams.forEach(p=>rows.push([p.id,p.ctrl,`"${p.desc.replace(/"/g,'""')}"`,p.risk,p.status,p.party,p.date,`"${(p.plan||'').replace(/"/g,'""')}"`,p.created?.substring(0,10)]));
+  downloadCSV(rows, 'poam.csv');
+  toast('POA&M exported');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// STIG MODAL
+// ════════════════════════════════════════════════════════════════════════════
+function openStigModal(){ document.getElementById('stigOverlay').classList.add('open'); }
+function closeStigModal(){ document.getElementById('stigOverlay').classList.remove('open'); }
+
+function saveStig(){
+  const id = document.getElementById('sf-id').value.trim();
+  const cat = document.getElementById('sf-cat').value;
+  const title = document.getElementById('sf-title').value.trim();
+  const details = document.getElementById('sf-details').value.trim();
+  if(!id||!title){ toast('Please enter a Vuln ID and title'); return; }
+  const cid = state.currentCtrl.id;
+  if(!state.ctrlStigs[cid]) state.ctrlStigs[cid]=[];
+  state.ctrlStigs[cid].push({id,cat,title,details});
+  logHistory(cid, `STIG finding logged: ${id} ${cat.toUpperCase()} — ${title}`);
+  lsSave();
+  closeStigModal();
+  refreshStigTab();
+  refreshHistoryTab();
+  document.getElementById('sf-id').value='';
+  document.getElementById('sf-title').value='';
+  document.getElementById('sf-details').value='';
+  toast('STIG finding logged');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// OVERLAYS
+// ════════════════════════════════════════════════════════════════════════════
+function setOverlay(key, el){
+  state.activeOverlay = key;
+  lsSave();
+  document.querySelectorAll('.overlay-card').forEach(c=>c.classList.remove('active'));
+  el.classList.add('active');
+
+  const ov = OVERLAYS[key];
+  const det = document.getElementById('overlayDetails');
+  document.getElementById('overlayName').textContent=ov.name;
+  document.getElementById('overlayDesc').textContent=ov.desc;
+
+  if(ov.addl.length){
+    document.getElementById('overlayAddlControls').innerHTML=`
+      <div class="msec-lbl" style="margin-bottom:8px;">Additional Required Controls/Enhancements</div>
+      <div style="display:flex;flex-wrap:wrap;gap:6px;">${ov.addl.map(a=>`<span class="rel-chip">${a}</span>`).join('')}</div>`;
+  } else {
+    document.getElementById('overlayAddlControls').innerHTML='';
+  }
+  det.style.display='block';
+  document.getElementById('overlayFilter').value = key==='none'?'':key==='fedramp'?'fedramp':key==='dod'?'dod':key==='privacy'?'privacy':'';
+  toast(`Overlay applied: ${ov.name}`);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// USERS
+// ════════════════════════════════════════════════════════════════════════════
+function openUserModal(){ document.getElementById('u-name').value=''; document.getElementById('u-email').value=''; document.getElementById('userOverlay').classList.add('open'); }
+function closeUserModal(){ document.getElementById('userOverlay').classList.remove('open'); }
+
+function saveUser(){
+  const name = document.getElementById('u-name').value.trim();
+  const role = document.getElementById('u-role').value;
+  const email = document.getElementById('u-email').value.trim();
+  if(!name){ toast('Please enter a name'); return; }
+  state.users.push({name,role,email,added:new Date().toISOString()});
+  lsSave();
+  closeUserModal();
+  renderUsers();
+  updateTopbar();
+  toast(`${name} added to team`);
+}
+
+function removeUser(idx){
+  if(!confirm('Remove this team member?')) return;
+  state.users.splice(idx,1);
+  lsSave();
+  renderUsers();
+  updateTopbar();
+  toast('Team member removed');
+}
+
+function renderUsers(){
+  const ul = document.getElementById('userList');
+  const ue = document.getElementById('userEmpty');
+  if(!state.users.length){ ul.innerHTML=''; ue.style.display='block'; return; }
+  ue.style.display='none';
+  ul.innerHTML = state.users.map((u,i)=>{
+    const assigned = CONTROLS.filter(c=>go(c.id)===u.name).length;
+    return `<div class="user-card">
+      <div class="user-avatar">${u.name.charAt(0).toUpperCase()}</div>
+      <div>
+        <div class="user-name">${u.name}</div>
+        <div class="user-role">${u.role}${u.email?` • ${u.email}`:''}</div>
+      </div>
+      <div class="user-assignments">${assigned} controls assigned</div>
+      <button class="btn btn-sm btn-red" onclick="removeUser(${i})">Remove</button>
+    </div>`;
+  }).join('');
+  // Update bulk owner dropdown
+  const bos = document.getElementById('bulkOwnerSel');
+  if(bos){ bos.innerHTML='<option value="">Assign Owner…</option>'; state.users.forEach(u=>bos.innerHTML+=`<option value="${u.name}">${u.name}</option>`); }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// AI
+// ════════════════════════════════════════════════════════════════════════════
+function setAiChip(el, q){
+  document.getElementById('ai-q').value=q;
+  document.querySelectorAll('.ai-chip').forEach(c=>c.style.borderColor='');
+  el.style.borderColor='var(--accent)';
+}
+
+async function askAI(){
+  if(!state.currentCtrl) return;
+  const q = document.getElementById('ai-q').value.trim();
+  if(!q) return;
+  const c = state.currentCtrl;
+  const btn = document.getElementById('ai-go-btn');
+  btn.disabled=true;
+  document.getElementById('ai-thinking').classList.add('show');
+  document.getElementById('ai-resp').classList.remove('show');
+
+  const prompt = `You are a senior federal information security expert specializing in NIST 800-53 Rev 5, RMF, FedRAMP, and eMASS. You help ISSOs and security engineers.
+
+Control: ${c.id} — ${c.title}
+Family: ${c.family} (${FAMILIES.find(f=>f.code===c.family)?.name})
+Current Status: ${STATUS_LABELS[gs(c.id)]}
+Inheritance: ${INH_LABELS[gi(c.id)]||'Not set'}
+Description: ${c.desc}
+Guidance: ${c.guidance}
+Enhancements: ${c.enhancements.map(e=>e.id+': '+e.title).join('; ')||'None'}
+CCIs: ${c.ccis.map(x=>x.id).join(', ')||'None'}
+Overlay Active: ${state.activeOverlay}
+
+User Question: ${q}
+
+Provide expert, practical guidance specific to this control. Reference STIGs, CCIs, eMASS, or RMF artifacts where relevant. Use **bold** for key terms. Keep it concise (3-4 paragraphs max).`;
+
+  try{
+    const resp=await fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:1000,messages:[{role:'user',content:prompt}]})});
+    const data=await resp.json();
+    const text=data.content?.map(i=>i.text||'').join('')||'No response.';
+    document.getElementById('ai-resp-text').innerHTML=text.replace(/\*\*(.*?)\*\*/g,'<strong>$1</strong>').replace(/\n\n/g,'<br><br>').replace(/\n/g,'<br>');
+    document.getElementById('ai-resp').classList.add('show');
+  }catch(e){
+    document.getElementById('ai-resp-text').textContent='Error connecting. Please try again.';
+    document.getElementById('ai-resp').classList.add('show');
+  }finally{
+    btn.disabled=false;
+    document.getElementById('ai-thinking').classList.remove('show');
+  }
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// EXPORT / PRINT
+// ════════════════════════════════════════════════════════════════════════════
+function exportAll(){
+  const rows=[['Control ID','Title','Family','Baseline','Status','Inheritance','Owner','Enhancements','CCIs','Notes Count','Evidence Count','Open STIGs']];
+  CONTROLS.forEach(c=>{
+    const cmts=state.comments[c.id]||[];
+    const ev=state.evidence[c.id]||[];
+    const stigs=(state.ctrlStigs[c.id]||[]).length;
+    rows.push([c.id,c.title,c.family,c.impact.join(';'),STATUS_LABELS[gs(c.id)],INH_LABELS[gi(c.id)]||'',go(c.id),c.enhancements.length,c.ccis.length,cmts.length,ev.length,stigs]);
+  });
+  downloadCSV(rows,'nist-800-53-controls.csv');
+  toast('Controls exported to CSV');
+}
+
+function downloadCSV(rows, filename){
+  const csv=rows.map(r=>r.map(v=>`"${String(v||'').replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');
+  a.href='data:text/csv;charset=utf-8,'+encodeURIComponent(csv);
+  a.download=filename; a.click();
+}
+
+function printReport(){
+  const impl  = CONTROLS.filter(c=>gs(c.id)==='impl').length;
+  const total = CONTROLS.length;
+  const pct   = Math.round(impl/total*100);
+
+  const reportHTML = `<!DOCTYPE html><html><head><title>SSP Controls Report</title><style>
+    *{box-sizing:border-box;}
+    body{font-family:Arial,sans-serif;font-size:11px;color:#000;margin:24px;}
+    h1{font-size:17px;margin-bottom:4px;}
+    .meta{font-size:10px;color:#555;margin-bottom:16px;border-bottom:1px solid #ccc;padding-bottom:8px;}
+    h2{font-size:13px;border-bottom:2px solid #333;padding-bottom:4px;margin:20px 0 8px;}
+    table{width:100%;border-collapse:collapse;margin-bottom:16px;font-size:10px;page-break-inside:auto;}
+    th{background:#e8e8e8;padding:5px 8px;text-align:left;border:1px solid #bbb;white-space:nowrap;}
+    td{padding:4px 8px;border:1px solid #ddd;vertical-align:top;}
+    tr{page-break-inside:avoid;}
+    .impl{color:green;font-weight:bold;}
+    .inprog{color:darkorange;font-weight:bold;}
+    .notstart{color:red;font-weight:bold;}
+    .na{color:purple;font-weight:bold;}
+    .none{color:#999;}
+    @media print{@page{margin:1cm;} button{display:none!important;}}
+  </style></head><body>
+  <h1>&#128196; System Security Plan — Control Implementation Summary</h1>
+  <div class="meta">
+    Generated: ${new Date().toLocaleString()} &nbsp;|&nbsp;
+    Implemented: ${impl}/${total} (${pct}%) &nbsp;|&nbsp;
+    Overlay: ${OVERLAYS[state.activeOverlay]?.name||'NIST Baseline'} &nbsp;|&nbsp;
+    Open POA&Ms: ${state.poams.filter(p=>p.status==='open').length}
+  </div>
+  <button onclick="window.print()" style="margin-bottom:16px;padding:8px 16px;background:#1d4ed8;color:white;border:none;border-radius:4px;font-size:12px;cursor:pointer;">&#128424; Print / Save as PDF</button>
+  <h2>Control Implementation Status</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Title</th><th>Family</th><th>Baseline</th><th>Status</th><th>Inheritance</th><th>Owner</th><th>Latest Note</th></tr></thead>
+    <tbody>
+    ${CONTROLS.map(c=>{
+      const s    = gs(c.id);
+      const note = (state.comments[c.id]||[])[0]?.text||'';
+      return `<tr>
+        <td><strong>${c.id}</strong></td>
+        <td>${c.title}</td>
+        <td>${c.family}</td>
+        <td>${c.impact.join('/')}</td>
+        <td class="${s}">${STATUS_LABELS[s]}</td>
+        <td>${INH_LABELS[gi(c.id)]||'—'}</td>
+        <td>${go(c.id)||'—'}</td>
+        <td>${note}</td>
+      </tr>`;
+    }).join('')}
+    </tbody>
+  </table>
+  ${state.poams.length ? `
+  <h2>POA&M Entries (${state.poams.filter(p=>p.status==='open').length} open / ${state.poams.length} total)</h2>
+  <table>
+    <thead><tr><th>ID</th><th>Control</th><th>Finding</th><th>Risk</th><th>Status</th><th>Responsible Party</th><th>Due Date</th><th>Remediation Plan</th></tr></thead>
+    <tbody>
+    ${state.poams.map(p=>`<tr>
+      <td>${p.id}</td><td>${p.ctrl||'—'}</td><td>${p.desc}</td>
+      <td style="color:${p.risk==='high'?'red':p.risk==='moderate'?'darkorange':'goldenrod'};font-weight:bold;">${(p.risk||'').toUpperCase()}</td>
+      <td>${p.status}</td><td>${p.party||'—'}</td><td>${p.date||'—'}</td><td>${p.plan||'—'}</td>
+    </tr>`).join('')}
+    </tbody>
+  </table>` : ''}
+  </body></html>`;
+
+  // Use a hidden iframe — works even when popups are blocked
+  let frame = document.getElementById('_printFrame');
+  if(!frame){
+    frame = document.createElement('iframe');
+    frame.id = '_printFrame';
+    frame.style.cssText = 'position:fixed;top:-9999px;left:-9999px;width:1280px;height:900px;border:none;visibility:hidden;';
+    document.body.appendChild(frame);
+  }
+  frame.srcdoc = reportHTML;
+  frame.onload = () => {
+    try {
+      frame.style.visibility = 'visible';
+      frame.contentWindow.focus();
+      frame.contentWindow.print();
+      setTimeout(() => { frame.style.visibility = 'hidden'; }, 1000);
+    } catch(e) {
+      // Fallback: open as blob URL which browsers always allow
+      const blob = new Blob([reportHTML], {type:'text/html'});
+      const url  = URL.createObjectURL(blob);
+      window.open(url, '_blank');
+      toast('Report opened in new tab — use Ctrl+P to print');
+    }
+  };
+  toast('Preparing SSP report…');
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// KEYBOARD SHORTCUTS
+// ════════════════════════════════════════════════════════════════════════════
+function toggleKB(){ document.getElementById('kbHelp').classList.toggle('open'); }
+
+document.addEventListener('keydown',e=>{
+  const tag=document.activeElement.tagName;
+  if(tag==='INPUT'||tag==='TEXTAREA'||tag==='SELECT') return;
+  if(e.key==='Escape'){
+    document.querySelectorAll('.overlay.open').forEach(o=>o.classList.remove('open'));
+    document.getElementById('kbHelp').classList.remove('open');
+  }
+  if(e.key==='?') toggleKB();
+  if(e.key==='s'||e.key==='S'){ showPage('controls',document.querySelector('.nav-item:nth-child(2)')); setTimeout(()=>document.getElementById('searchInput')?.focus(),100); }
+  if(e.key==='1'){ document.querySelectorAll('.nav-item')[0].click(); }
+  if(e.key==='2'){ document.querySelectorAll('.nav-item')[1].click(); }
+  if(e.key==='3'){ document.querySelectorAll('.nav-item')[2].click(); }
+  if(e.key==='b'||e.key==='B') toggleBulkMode();
+  if((e.key==='j'||e.key==='J') && state.currentCtrl){
+    const next=state.currentCtrlIdx+1;
+    if(next<state.filteredCtrls.length) openCtrlModal(state.filteredCtrls[next].id,next);
+  }
+  if((e.key==='k'||e.key==='K') && state.currentCtrl){
+    const prev=state.currentCtrlIdx-1;
+    if(prev>=0) openCtrlModal(state.filteredCtrls[prev].id,prev);
+  }
+});
+
+// ════════════════════════════════════════════════════════════════════════════
+// TOAST
+// ════════════════════════════════════════════════════════════════════════════
+let toastTimer;
+function toast(msg){
+  const t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer=setTimeout(()=>t.classList.remove('show'),2800);
+}
+
+// ════════════════════════════════════════════════════════════════════════════
+// SAFE DOM HELPERS  — never crash on missing elements
+// ════════════════════════════════════════════════════════════════════════════
+function $id(id){ return document.getElementById(id); }
+function setText(id, val){ const el=$id(id); if(el) el.textContent=val; }
+function setHTML(id, val){ const el=$id(id); if(el) el.innerHTML=val; }
+function setVal(id, val){ const el=$id(id); if(el) el.value=val; }
+function addClass(id, cls){ const el=$id(id); if(el) el.classList.add(cls); }
+function removeClass(id, cls){ const el=$id(id); if(el) el.classList.remove(cls); }
+function toggleClass(id, cls){ const el=$id(id); if(el) el.classList.toggle(cls); }
+function setStyle(id, prop, val){ const el=$id(id); if(el) el.style[prop]=val; }
+
+// Patch all unsafe calls in updateTopbar and renderDashboard using helpers
+const _origUpdateTopbar = updateTopbar;
+updateTopbar = function(){
+  const total = CONTROLS.length;
+  const impl  = CONTROLS.filter(c=>gs(c.id)==='impl').length;
+  const pct   = Math.round(impl/total*100);
+  setText('tbImpl',   pct+'%');
+  setText('tbPoam',   state.poams.filter(p=>p.status==='open').length);
+  setText('tbUsers',  state.users.length);
+  setText('navCtrlCount',  CONTROLS.length);
+  setText('navPoamCount',  state.poams.filter(p=>p.status==='open').length);
+  setText('saveIndicator', '● Saved locally');
+  setStyle('saveIndicator','color','var(--green)');
+};
+
+const _origRenderDashboard = renderDashboard;
+renderDashboard = function(){
+  try { _origRenderDashboard(); } catch(e) {
+    console.warn('renderDashboard error (non-fatal):', e.message);
+  }
+};
+
+// ════════════════════════════════════════════════════════════════════════════
+// BOOT
+// ════════════════════════════════════════════════════════════════════════════
+try {
+  init();
+} catch(e) {
+  console.error('Init error:', e);
+  // Show a visible error so the user knows what happened
+  document.body.insertAdjacentHTML('afterbegin',
+    `<div style="position:fixed;top:0;left:0;right:0;z-index:99999;background:#ef4444;color:white;padding:12px 20px;font-family:monospace;font-size:12px;">
+      ⚠ Startup error: ${e.message} — Check browser console (F12) for details.
+      <button onclick="localStorage.clear();location.reload()" style="margin-left:16px;background:white;color:#ef4444;border:none;padding:4px 10px;border-radius:4px;cursor:pointer;font-weight:bold;">Reset &amp; Reload</button>
+    </div>`
+  );
+}
+</script>
+</body>
+</html>
